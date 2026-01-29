@@ -500,7 +500,9 @@
             <!-- Cart items will be inserted here -->
         </div>
     </div>
+   
 
+    
     <script type="module">
        
         // --------------- Declaraciones -----------------
@@ -520,12 +522,15 @@ console.log("dolares a pesos:",dolarAuyu);
 
         // ---------- Declaración de funciones -------------
         window.pagarcarrito = async function pagarcarrito() {
-            const checkoutBtn = document.getElementById("checkout-btn");
+            if(document.querySelector(`input[name="respuesta"]:checked`) && document.querySelector(`input[name="respuesta"]:checked`).value==="si"){window.location.href="/compra-carrito"}
+            else{const checkoutBtn = document.getElementById("checkout-btn");
             checkoutBtn.disabled = true;
             checkoutBtn.textContent = "Procesando...";
             
             try {
-                const res = await fetch("/comprar-carrito").then(res => res.json());
+                const res = await fetch("/comprar-carrito",{method:"POST",headers:{"Content-Type":"application/json"},body:
+                   JSON.stringify({ubicacion:" no definida (se recogerá en el local)"}) }
+                ).then(res => res.json());
                 window.location.href = res.init_point;
             } catch (error) {
                 console.error("Error al procesar pago:", error);
@@ -561,7 +566,8 @@ console.log("dolares a pesos:",dolarAuyu);
                         mostrarCarritoVacio();
                     }
                 }, 300);
-            }
+            }}
+            
         }
 
         function actualizarTotal() {
@@ -604,11 +610,17 @@ console.log("dolares a pesos:",dolarAuyu);
             }
 
             // Calcular total
+            let precioenvio=0; console.log("carrito:xd",carrito)
             for (let producto of carrito) {
                 let precioNumerico = Number(producto.producto_precio.match(/\d+/)[0]);
                 if (producto.producto_precio.includes("US$")){precioNumerico=precioNumerico*dolarAuyu}
                 precio += precioNumerico;
-            }
+                console.log(producto.producto_envio,"producto_envio")
+                if(producto.producto_envio!==undefined &&producto.producto_envio.includes("US$")){producto.producto_envio=Number(producto.producto_envio.match(/\d+/)[0])*dolarAuyu}
+                if(producto.producto_envio!==undefined){ console.log("precio de envio:", precioenvio)
+                    if(Number(producto.producto_envio.match(/\d+/)[0])>precioenvio) {precioenvio= Number(producto.producto_envio.match(/\d+/)[0])}
+                
+            }}
             let a=0
             let preciocoma=""
             for(let numcomas of  precio.toString().split(".")[1] ){ if(a<2){preciocoma+=numcomas} ++a
@@ -681,14 +693,23 @@ console.log("dolares a pesos:",dolarAuyu);
                     
                     <div class="summary-row">
                         <span class="summary-label">Envío</span>
-                        <span class="summary-value">Gratis</span>
+                        <span class="summary-value">$${precioenvio}</span>
                     </div>
                     
                     <div class="summary-total">
                         <span class="total-label">Total</span>
-                        <span class="total-value" id="total-price">$${precio}</span>
+                        <span class="total-value" id="total-price">$${Number(precio) + Number(precioenvio)}</span>
                     </div>
-                    
+                         <p>¿desea incluir gastos de envío?</p>
+            <label >
+            <input type="radio" name="respuesta" value="si">
+            si
+         </label>
+
+          <label >
+            <input type="radio" name="respuesta" value="no">
+            no
+         </label>
                     <button onclick="pagarcarrito()" class="btn btn-checkout" id="checkout-btn">
                         💳 Proceder al Pago
                     </button>
