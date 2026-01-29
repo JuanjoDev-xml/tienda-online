@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>compra</title>
+</head>
+<body>
+<h1>compra</h1>
+
+<p>¡ingrese su dirección para que se lo podamos enviar!</p>
+<input type="text" id="direccion" placeholder="Ingrese su dirección"> <br>
+<br>
+
+<button onclick="comprar()">pagar</button>
+
+<script type="module">
+    window.comprar= async function(){
+         await fetch("/comprar-carrito",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+         ubicacion: document.getElementById("direccion").value
+         })})
+                        .then(data => data.json())
+                        .then(data => window.location.href = data.init_point);
+    }
+</script>
+    
+</body>
+</html>
