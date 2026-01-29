@@ -1,23 +1,23 @@
 //------------------------------importaciones-------------------------
 import express from 'express'
-import {log} from './mongo.js'
-import {log_products} from './mongo-productos.js'
+import {log} from './base_de_datos_mongo/mongo.js'
+import {log_products} from './base_de_datos_mongo/mongo-productos.js'
 import {createServer} from 'http'
 import {Server} from 'socket.io'
 import dotenv from 'dotenv'
 import path from 'path'
 import multer from 'multer'
 import { now } from 'mongoose'
-import {log_comentarios} from './mongo-comentarios.js'
-import { log_respuestas } from './mongo-respuestas.js'
+import {log_comentarios} from './base_de_datos_mongo/mongo-comentarios.js'
+import { log_respuestas } from './base_de_datos_mongo/mongo-respuestas.js'
 import session from 'express-session'
-import { log_mensajes_cliente } from './mongo-mensajes-cliente.js'
-import { log_notificaciones_vendedor } from './mongo-notificaciones-vendedor.js'
-import { log_notificaciones_comprador } from './mongo-notificaciones-cliente.js'
+import { log_mensajes_cliente } from './base_de_datos_mongo/mongo-mensajes-cliente.js'
+import { log_notificaciones_vendedor } from './base_de_datos_mongo/mongo-notificaciones-vendedor.js'
+import { log_notificaciones_comprador } from './base_de_datos_mongo/mongo-notificaciones-cliente.js'
 import bcryptjs from 'bcryptjs'
 import {MercadoPagoConfig,Preference,Payment} from 'mercadopago'
-import { log_carrito } from './mongo-carrito.js'
-import {log_compras} from './mongo-compras.js'
+import { log_carrito } from './base_de_datos_mongo/mongo-carrito.js'
+import {log_compras} from './base_de_datos_mongo/mongo-compras.js'
 dotenv.config()
 
 //-----------------------------declaraciones--------------------------
@@ -387,17 +387,27 @@ app.post("/comprar",async function(req,res){console.log("comprar")
  
 })
 
-app.get("/comprar-carrito",async function(req,res){
+app.post("/comprar-carrito",async function(req,res){
     let carrito= await log_carrito.find({usuario: req.session.usuario})
     console.log(carrito)
- 
+    let coste_envio=0
 
 console.log("dolares a pesos:",dolarAuyu);
-
+let precio_envio=0
     let preciototal=0
+
     for(let producto of carrito){let producto_precio= Number(producto.producto_precio.match(/\d+/))
        if(producto.producto_precio.includes("US$")){producto_precio= producto_precio*dolarAuyu}
-        preciototal+=producto_precio }
+        preciototal+=producto_precio;
+
+      if(producto.producto_envio!==undefined){ let precio_envio= Number(producto.producto_envio.match(/\d+/))}
+
+        if(producto.producto_envio!==undefined && producto.producto_envio.includes("US$")){
+            precio_envio= precio_envio*dolarAuyu}
+
+    if(precio_envio>coste_envio){coste_envio=precio_envio} }
+
+if(req.body.ubicacion){preciototal+=coste_envio}
 
         try{
         const body= {
@@ -408,6 +418,9 @@ console.log("dolares a pesos:",dolarAuyu);
             }],  external_reference:req.session.usuario,
              payer: {  // ← ESTO ES LO QUE FALTA
                 email: "test_user_123456@testuser.com"  // Email de prueba
+            },metadata:{
+                carrito:carrito,
+                direccion: req.body.ubicacion
             },
             back_urls:{
                 success: `https://tienda-online-5jo4.onrender.com/tienda/${req.session.usuario}`,
@@ -448,20 +461,40 @@ app.post("/webhook", async function(req, res) {
             const paymentInfo= await payment.get({id:paymentId})
             // Opcional: Obtener más detalles del pago
             // const payment = await Payment.get({ id: paymentId });
-             if(paymentInfo.status==="approved"){
-                 try{ let producto= await log_products.find({producto_id:paymentInfo.metadata.id})
+             if(paymentInfo.status==="approved" && !paymentInfo.metadata.carrito){
+
+                 try{ 
+                    let producto= await log_products.find({producto_id:paymentInfo.metadata.id})
                     console.log("creando notificacion"); await log_notificaciones_vendedor.create({
         usuario: paymentInfo.external_reference,
         notificacion: `el usuario ${paymentInfo.external_reference} ha comprado el producto ${paymentInfo.metadata.producto}`,
        producto: paymentInfo.metadata.producto
 
-    });  await log_compras.create({usuario: paymentInfo.external_reference,
+    }); 
+    
+    if(!paymentInfo.metadata.carrito){await log_compras.create({usuario: paymentInfo.external_reference,
         producto_nombre: paymentInfo.metadata.producto,
         producto_id:paymentInfo.metadata.id, producto_precio: producto.producto_precio, producto_envio: producto.producto_envio,
         local_ubicacion: paymentInfo.metadata.direccion
         
-    }); console.log("se creo el log de la compra")
+    }); console.log("se creo el log de la compra")} 
 
+
+    if(paymentInfo.status==="approved" && paymentInfo.metadata.carrito){ let envio=0
+       
+        for(let producto of carrito){ let precio_envio= Number(producto.producto_envio.match(/\d+/))
+
+        if(producto.producto_envio.includes("US$")){precio_envio= precio_envio*dolarAuyu}
+            if(precio_envio>envio){envio=precio_envio}}
+
+        try{
+            await log_compras.create({usuario: paymentInfo.external_reference,
+            carrito: paymentInfo.metadata.carrito,
+         producto_envio: envio,
+        local_ubicacion: paymentInfo.metadata.direccion
+        
+    })}catch(error){console.log("error creando la notificacion del carrito",error)}
+    }
 }catch(error){console.log("no se pudo crear la notificación",error)}
 
 
@@ -490,7 +523,8 @@ app.post("/webhook", async function(req, res) {
             producto_nombre: producto[0].producto_nombre,
             producto_precio: producto[0].producto_precio,
             producto_id: Number(req.body.id),
-            producto_imagen: producto[0].producto_imagen
+            producto_imagen: producto[0].producto_imagen,
+            producto_envio: producto[0].producto_envio
         })
     })
 
@@ -507,6 +541,10 @@ app.post("/webhook", async function(req, res) {
     app.post("/quitar-del-carrito",async function(req,res){
         await log_carrito.findOneAndDelete({producto_id: Number(req.body.id)})
         res.send("ok")
+    })
+
+    app.get("/compra-carrito",function(req,res){
+        res.render("compra-carrito")
     })
 //----------------rutas dinámicas--------------------
 
