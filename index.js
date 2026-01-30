@@ -400,14 +400,14 @@ let precio_envio=0
        if(producto.producto_precio.includes("US$")){producto_precio= producto_precio*dolarAuyu}
         preciototal+=producto_precio;
 
-      if(producto.producto_envio!==undefined){ precio_envio= Number(producto.producto_envio.match(/\d+/)); console.log("el precio del envío es:",precio_envio)}
+      if(producto.producto_envio){ precio_envio= Number(producto.producto_envio.match(/\d+/)); console.log("precio_envio:", precio_envio)}
 
         if(producto.producto_envio!==undefined && producto.producto_envio.includes("US$")){
             precio_envio= precio_envio*dolarAuyu}
 
-    if(precio_envio>coste_envio){coste_envio=precio_envio} }
+    if(precio_envio>coste_envio){coste_envio=precio_envio; console.log("coste envio: ", coste_envio)} }
 
-if(req.body.ubicacion){preciototal+=coste_envio; console.log("hay ubicacion"); console.log("coste del envio:",coste_envio)}
+if(req.body.ubicacion!==" no definida (se recogerá en el local)"){preciototal+=coste_envio; console.log("hay ubicación")}
 
         try{
         const body= {
