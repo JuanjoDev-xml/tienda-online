@@ -503,10 +503,12 @@ app.post("/webhook", async function(req, res) {
                 console.log("producto del webhook:",producto)
         
     if(Number(producto[0].producto_stock)>0){let nuevoproducto= await log_products.findOneAndUpdate({producto_id: producto[0].producto_id},{producto_stock: `${Number(producto[0].producto_stock)-1}`})
+        for(let productos of paymentInfo.metadata.carrito){
+    if(Number(productos.producto_stock)>0){let nuevoproducto= await log_products.findOneAndUpdate({producto_id: productos.producto_id},{producto_stock: `${Number(productos.producto_stock)-1}`})}
    }}
    
                 
-             }catch(error) {
+             }}catch(error) {
             console.error("❌ Error procesando el pago:", error);
         }
         
