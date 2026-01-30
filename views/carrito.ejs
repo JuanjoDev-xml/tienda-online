@@ -510,15 +510,13 @@
         let cartContainer = document.getElementById("cart-container");
         console.log("Carrito:", carrito);
         let precio = 0;
-           const response = await fetch(
-  `https://api.exchangeratesapi.io/v1/latest?access_key=<%= KEY %>&currencies=USD,UYU"`
-);
+                const response = await fetch("https://open.er-api.com/v6/latest/USD")
+;
 
 const data = await response.json();
 
-const dolarAuyu = data.rates.UYU/data.rates.USD;
-
-console.log("dolares a pesos:",dolarAuyu);
+const dolarAuyu =data.rates.UYU;
+console.log(dolarAuyu)
 
         // ---------- Declaración de funciones -------------
         window.pagarcarrito = async function pagarcarrito() {
