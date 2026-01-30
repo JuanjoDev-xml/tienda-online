@@ -463,7 +463,7 @@ app.post("/webhook", async function(req, res) {
              else{const paymentId = req.body.resource?.split("/").pop(); }
             const paymentInfo= await payment.get({id:paymentId})
 
-            await log_pagos_id.create({pymentId: paymentId})
+            await log_pagos_id.create({paymentId: paymentId})
 
             let payment_base_datos= await log_pagos_id.find({paymentId:paymentId})
             if(payment_base_datos.length===1){return}
