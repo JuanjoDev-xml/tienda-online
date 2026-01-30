@@ -407,7 +407,7 @@ let precio_envio=0
 
     if(precio_envio>coste_envio){coste_envio=precio_envio} }
 
-if(req.body.ubicacion){preciototal+=coste_envio}
+if(req.body.ubicacion){preciototal+=coste_envio; console.log("hay ubicacion"); console.log("coste del envio:",coste_envio)}
 
         try{
         const body= {
