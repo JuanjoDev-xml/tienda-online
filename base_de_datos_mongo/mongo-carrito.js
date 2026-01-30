@@ -10,7 +10,8 @@ let esquema=new mongoose.Schema({
  producto_nombre: String,
  producto_precio: String,
  producto_id: Number,
- producto_imagen: Array
+ producto_imagen: Array,
+ producto_envio: String
 });
 
 export let log_carrito= mongoose.model("carrito-tienda-online",esquema)
