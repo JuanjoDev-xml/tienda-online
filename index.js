@@ -18,6 +18,8 @@ import bcryptjs from 'bcryptjs'
 import {MercadoPagoConfig,Preference,Payment} from 'mercadopago'
 import { log_carrito } from './base_de_datos_mongo/mongo-carrito.js'
 import {log_compras} from './base_de_datos_mongo/mongo-compras.js'
+import { log_pagos_id } from './base_de_datos_mongo/mongo_pagos.js'
+
 dotenv.config()
 
 //-----------------------------declaraciones--------------------------
@@ -458,7 +460,14 @@ app.post("/webhook", async function(req, res) {
             // Aquí procesás la notificación del pago
                 if(data && data.id){
              paymentId = data.id;}
+             else{const paymentId = req.body.resource?.split("/").pop(); }
             const paymentInfo= await payment.get({id:paymentId})
+
+            await log_pagos_id.create({pymentId: paymentId})
+
+            let payment_base_datos= await log_pagos_id.find({paymentId:paymentId})
+            if(payment_base_datos.length===1){return}
+            
             // Opcional: Obtener más detalles del pago
             // const payment = await Payment.get({ id: paymentId });
              if(paymentInfo.status==="approved" && !paymentInfo.metadata.carrito){
