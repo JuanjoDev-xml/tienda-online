@@ -489,7 +489,7 @@ app.post("/webhook", async function(req, res) {
 
         try{
             await log_compras.create({usuario: paymentInfo.external_reference,
-            carrito: paymentInfo.metadata.carrito,
+            productos: paymentInfo.metadata.carrito,
          producto_envio: envio,
         local_ubicacion: paymentInfo.metadata.direccion
         
