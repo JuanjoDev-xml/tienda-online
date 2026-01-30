@@ -400,7 +400,7 @@ let precio_envio=0
        if(producto.producto_precio.includes("US$")){producto_precio= producto_precio*dolarAuyu}
         preciototal+=producto_precio;
 
-      if(producto.producto_envio!==undefined){ let precio_envio= Number(producto.producto_envio.match(/\d+/))}
+      if(producto.producto_envio!==undefined){ precio_envio= Number(producto.producto_envio.match(/\d+/))}
 
         if(producto.producto_envio!==undefined && producto.producto_envio.includes("US$")){
             precio_envio= precio_envio*dolarAuyu}
