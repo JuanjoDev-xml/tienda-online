@@ -21,13 +21,13 @@ import {log_compras} from './base_de_datos_mongo/mongo-compras.js'
 dotenv.config()
 
 //-----------------------------declaraciones--------------------------
-           const response = await fetch(
-  `https://api.exchangeratesapi.io/v1/latest?access_key=${process.env.KEY}&currencies=USD,UYU"`
-);
+           const response = await fetch("https://open.er-api.com/v6/latest/USD")
+;
 
 const data = await response.json();
 
-const dolarAuyu = data.rates.UYU/data.rates.USD;
+const dolarAuyu =data.rates.UYU;
+console.log(dolarAuyu)
 //---------------------------- servidores-----------------------------
 let app= express()
 const server= createServer(app)
