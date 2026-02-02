@@ -31,7 +31,6 @@ const data = await response.json();
 const dolarAuyu =data.rates.UYU;
 console.log(dolarAuyu)
 
-let i=0
 //---------------------------- servidores-----------------------------
 let app= express()
 const server= createServer(app)
@@ -458,7 +457,6 @@ app.post("/webhook", async function(req, res) {
     console.log("ℹ️ Webhook ignorado - merchant_order");
     return res.sendStatus(200);
 }       
-              let paymentId; if(i%2===0){res.sendStatus(200);return}
             // Aquí procesás la notificación del pago
                 if(data && data.id){
              paymentId = data.id;}
