@@ -456,7 +456,9 @@ app.post("/webhook", async function(req, res) {
             if (topic === 'merchant_order' || type === 'merchant_order') {
     console.log("ℹ️ Webhook ignorado - merchant_order");
     return res.sendStatus(200);
-}       
+
+}
+                   let paymentId;
             // Aquí procesás la notificación del pago
                 if(data && data.id){
              paymentId = data.id;}
