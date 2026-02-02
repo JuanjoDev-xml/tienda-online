@@ -1,4 +1,4 @@
-//------------------------------importaciones-------------------------
+//------------------------------importaciones------------------------- 
 import express from 'express'
 import {log} from './base_de_datos_mongo/mongo.js'
 import {log_products} from './base_de_datos_mongo/mongo-productos.js'
