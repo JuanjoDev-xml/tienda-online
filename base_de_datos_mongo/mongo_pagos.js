@@ -15,4 +15,4 @@ export const log_pagos_id = mongoose.model(
   esquema
 );
 
-await log_pagos_id.init(); 
+await log_pagos_id.init(); //no sé como esto funciona, pero funciona (creo)
