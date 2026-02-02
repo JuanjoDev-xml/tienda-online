@@ -6,7 +6,7 @@ try{await mongoose.connect(process.env.URL)}
 catch(error){console.log("error:",error)}
 
 let esquema=new mongoose.Schema({
- paymentId:{type: String}
+ paymentId:{type: String,required:true,unique:true}
 });
 
 esquema.index({paymentId:1},{unique:true})
