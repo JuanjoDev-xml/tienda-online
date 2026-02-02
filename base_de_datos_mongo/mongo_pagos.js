@@ -6,7 +6,7 @@ try{await mongoose.connect(process.env.URL)}
 catch(error){console.log("error:",error)}
 
 let esquema=new mongoose.Schema({
- paymentId: String,
+ paymentId: Number,
 });
 
 export let log_pagos_id= mongoose.model("pagos-id-tienda-online",esquema)
