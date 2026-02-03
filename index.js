@@ -509,7 +509,7 @@ app.post("/webhook", async function(req, res) {
              }
              if(paymentInfo.status==="approved" && paymentInfo.metadata.carrito){ let envio=0
        
-        for(let producto of carrito){ let precio_envio= Number(producto.producto_envio.match(/\d+/))
+        for(let producto of paymentInfo.metadata.carrito){ let precio_envio= Number(producto.producto_envio.match(/\d+/))
 
         if(producto.producto_envio.includes("US$")){precio_envio= precio_envio*dolarAuyu}
             if(precio_envio>envio){envio=precio_envio}}
