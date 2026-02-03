@@ -487,7 +487,7 @@ app.post("/webhook", async function(req, res) {
     
     if(!paymentInfo.metadata.carrito){await log_compras.create({usuario: paymentInfo.external_reference,
         producto_nombre: paymentInfo.metadata.producto,
-        producto_id:paymentInfo.metadata.id, producto_precio: producto.producto_precio, producto_envio: producto.producto_envio,
+        producto_id:paymentInfo.metadata.id, producto_precio: producto[0].producto_precio, producto_envio: producto[0].producto_envio,
         local_ubicacion: paymentInfo.metadata.direccion
         
     }); console.log("se creo el log de la compra")} 
