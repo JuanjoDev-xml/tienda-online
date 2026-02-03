@@ -7,7 +7,7 @@ catch(error){console.log("error:",error)}
 
 let esquema=new mongoose.Schema({
     usuario: String,
-    productos: Array,
+    productos:{type: Array, required: false},
  producto_nombre: String,
  producto_precio: String,
  producto_stock: String,
