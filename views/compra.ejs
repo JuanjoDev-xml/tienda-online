@@ -26,6 +26,7 @@
 
 <script type="module">
     window.comprar= async function(){
+      if(document.getElementById("direccion").value===""){document.getElementById("direccion").value=" no definida (se recogerá en el local)"}
          await fetch("/comprar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
          envio: document.querySelector('input[name="respuesta"]:checked').value,
          ubicacion: document.getElementById("direccion").value
