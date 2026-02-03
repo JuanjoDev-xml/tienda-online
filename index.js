@@ -494,6 +494,8 @@ app.post("/webhook", async function(req, res) {
 
 
     if(paymentInfo.status==="approved" && paymentInfo.metadata.carrito){ let envio=0
+
+           console.log("haz hecho un carrito")
        
         for(let producto of carrito){ let precio_envio= Number(producto.producto_envio.match(/\d+/))
 
