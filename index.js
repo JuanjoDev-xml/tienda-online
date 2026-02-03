@@ -488,7 +488,7 @@ app.post("/webhook", async function(req, res) {
         producto_id:paymentInfo.metadata.id, producto_precio: producto[0].producto_precio, producto_envio: producto[0].producto_envio,
         local_ubicacion: paymentInfo.metadata.direccion
         
-    }); console.log("se creo el log de la compra")}
+    }); console.log("se creo el log de la compra")} 
 
 
     
@@ -498,21 +498,38 @@ app.post("/webhook", async function(req, res) {
                 console.log("pago aprobado")
                 let producto= await log_products.find({producto_id: paymentInfo.metadata.id})
                 console.log("producto del webhook:",producto)
+                
         
     if(Number(producto &&producto[0].producto_stock)>0){let nuevoproducto= await log_products.findOneAndUpdate({producto_id: producto[0].producto_id},{producto_stock: `${Number(producto[0].producto_stock)-1}`})
         for(let productos of paymentInfo.metadata.carrito){
     if(Number(productos.producto_stock)>0){let nuevoproducto= await log_products.findOneAndUpdate({producto_id: productos.producto_id},{producto_stock: `${Number(productos.producto_stock)-1}`})}
-   }}}
+   }}
    
                 
-             }catch(error) {
+             }
+             if(paymentInfo.status==="approved" && paymentInfo.metadata.carrito){ let envio=0
+       
+        for(let producto of carrito){ let precio_envio= Number(producto.producto_envio.match(/\d+/))
+
+        if(producto.producto_envio.includes("US$")){precio_envio= precio_envio*dolarAuyu}
+            if(precio_envio>envio){envio=precio_envio}}
+
+        try{
+            await log_compras.create({usuario: paymentInfo.external_reference,
+            productos: paymentInfo.metadata.carrito,
+         producto_envio: envio,
+        local_ubicacion: paymentInfo.metadata.direccion
+        
+    })}catch(error){console.log("error creando la notificacion del carrito",error)}
+    }
+            }catch(error) {
             console.error("❌ Error procesando el pago:", error);
         }
         
             
             
             
-       res.sendStatus(200)  }
+       res.sendStatus(200)  } 
     )
 
     app.post("/carrito",async function(req,res){
