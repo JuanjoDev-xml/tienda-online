@@ -501,7 +501,7 @@ app.post("/webhook", async function(req, res) {
                 console.log("producto del webhook:",producto)
                 
         
-    if(Number(producto &&producto[0].producto_stock)>0){let nuevoproducto= await log_products.findOneAndUpdate({producto_id: producto[0].producto_id},{producto_stock: `${Number(producto[0].producto_stock)-1}`})
+    if(producto && Number(producto[0].producto_stock)>0){let nuevoproducto= await log_products.findOneAndUpdate({producto_id: producto[0].producto_id},{producto_stock: `${Number(producto[0].producto_stock)-1}`})
         for(let productos of paymentInfo.metadata.carrito){
     if(Number(productos.producto_stock)>0){let nuevoproducto= await log_products.findOneAndUpdate({producto_id: productos.producto_id},{producto_stock: `${Number(productos.producto_stock)-1}`})}
    }}
@@ -515,6 +515,8 @@ app.post("/webhook", async function(req, res) {
 
         if(producto.producto_envio.includes("US$")){precio_envio= precio_envio*dolarAuyu}
             if(precio_envio>envio){envio=precio_envio}}
+
+            if(Number(producto.producto_stock)>0){let nuevoproducto= await log_products.findOneAndUpdate({producto_id: producto.producto_id},{producto_stock: `${Number(producto.producto_stock)-1}`})}
         }
           
 
