@@ -1,4 +1,4 @@
-//------------------------------importaciones------------------------- 
+//------------------------------importaciones-------------------------
 import express from 'express'
 import {log} from './base_de_datos_mongo/mongo.js'
 import {log_products} from './base_de_datos_mongo/mongo-productos.js'
@@ -119,7 +119,7 @@ try{let comparacion= await bcryptjs.compare(req.body.contraseña, cuenta[0].cont
        
 })
 
-app.get("/tienda",function(req,res){
+app.get("/tienda",function(req,res){ if(req.session.usuario===undefined){res.send("login.html")}
     res.render("tienda",{nombre: req.session.usuario})
 })
 
@@ -456,16 +456,14 @@ app.post("/webhook", async function(req, res) {
             if (topic === 'merchant_order' || type === 'merchant_order') {
     console.log("ℹ️ Webhook ignorado - merchant_order");
     return res.sendStatus(200);
+}       
+              let paymentId; 
 
-}
-                   let paymentId;
-            // Aquí procesás la notificación del pago
+            // acá procesás la notificación del pago
                 if(data && data.id){
              paymentId = data.id;}
              else{paymentId = req.body.resource?.split("/").pop(); }
              const paymentInfo= await payment.get({id:paymentId})
-
-                   console.log("paymentId:",paymentId)
 
             await log_pagos_id.create({paymentId: paymentId})
 
@@ -490,26 +488,10 @@ app.post("/webhook", async function(req, res) {
         producto_id:paymentInfo.metadata.id, producto_precio: producto[0].producto_precio, producto_envio: producto[0].producto_envio,
         local_ubicacion: paymentInfo.metadata.direccion
         
-    }); console.log("se creo el log de la compra")} 
+    }); console.log("se creo el log de la compra")}
 
 
-    if(paymentInfo.status==="approved" && paymentInfo.metadata.carrito){ let envio=0
-
-           console.log("haz hecho un carrito")
-       
-        for(let producto of carrito){ let precio_envio= Number(producto.producto_envio.match(/\d+/))
-
-        if(producto.producto_envio.includes("US$")){precio_envio= precio_envio*dolarAuyu}
-            if(precio_envio>envio){envio=precio_envio}}
-
-        try{
-            await log_compras.create({usuario: paymentInfo.external_reference,
-            productos: paymentInfo.metadata.carrito,
-         producto_envio: envio,
-        local_ubicacion: paymentInfo.metadata.direccion
-        
-    })}catch(error){console.log("error creando la notificacion del carrito",error)}
-    }
+    
 }catch(error){console.log("no se pudo crear la notificación",error)}
 
 
@@ -520,17 +502,17 @@ app.post("/webhook", async function(req, res) {
     if(Number(producto &&producto[0].producto_stock)>0){let nuevoproducto= await log_products.findOneAndUpdate({producto_id: producto[0].producto_id},{producto_stock: `${Number(producto[0].producto_stock)-1}`})
         for(let productos of paymentInfo.metadata.carrito){
     if(Number(productos.producto_stock)>0){let nuevoproducto= await log_products.findOneAndUpdate({producto_id: productos.producto_id},{producto_stock: `${Number(productos.producto_stock)-1}`})}
-   }}
+   }}}
    
                 
-             }}catch(error) {
+             }catch(error) {
             console.error("❌ Error procesando el pago:", error);
         }
         
             
             
             
-       res.sendStatus(200)  } 
+       res.sendStatus(200)  }
     )
 
     app.post("/carrito",async function(req,res){
