@@ -119,7 +119,7 @@ try{let comparacion= await bcryptjs.compare(req.body.contraseña, cuenta[0].cont
        
 })
 
-app.get("/tienda",function(req,res){ if(req.session.usuario===undefined){res.send("login.html")}
+app.get("/tienda",function(req,res){ if(req.session.usuario===undefined){ return res.send("login.html",{root:import.meta.dirname})}
     res.render("tienda",{nombre: req.session.usuario})
 })
 
