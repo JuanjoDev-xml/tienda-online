@@ -391,15 +391,24 @@ app.post("/comprar",async function(req,res){console.log("comprar")
 })
 
 app.post("/comprar-carrito",async function(req,res){
+    let z=0
     let carrito= await log_carrito.find({usuario: req.session.usuario})
     console.log(carrito)
     let coste_envio=0
 
-console.log("dolares a pesos:",dolarAuyu);
+    let products= await log_products.find({})
 let precio_envio=0
     let preciototal=0
 
-    for(let producto of carrito){let producto_precio= Number(producto.producto_precio.match(/\d+/))
+      while(z<products.length){
+                for(let productos of carrito){if(products[z].producto_id===productos.producto_id && products[z].producto_stock==0){
+                    res.send("uno de los productos está sin stock, por favor vuélvalo a intentar con los productos disponibles"); return
+                }} ++z
+            }
+
+
+    for(let producto of carrito){
+        let producto_precio= Number(producto.producto_precio.match(/\d+/))
        if(producto.producto_precio.includes("US$")){producto_precio= producto_precio*dolarAuyu}
         preciototal+=producto_precio;
 
@@ -509,6 +518,7 @@ app.post("/webhook", async function(req, res) {
                 
              }
              if(paymentInfo.status==="approved" && paymentInfo.metadata.carrito){ let envio=0
+           await log_products.deleteMany({usuario: paymentInfo.external_reference})
        
         for(let producto of paymentInfo.metadata.carrito){ let product= (await log_products.find({producto_id: producto.producto_id}))[0]
             if(producto.producto_envio!==undefined){
