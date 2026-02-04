@@ -510,7 +510,7 @@ app.post("/webhook", async function(req, res) {
              }
              if(paymentInfo.status==="approved" && paymentInfo.metadata.carrito){ let envio=0
        
-        for(let producto of paymentInfo.metadata.carrito){ let product= await log_products.find({producto_id: producto.producto_id})
+        for(let producto of paymentInfo.metadata.carrito){ let product= await log_products.find({producto_id: producto.producto_id})[0]
             if(producto.producto_envio!==undefined){
               let precio_envio= Number(producto.producto_envio.match(/\d+/))
 
