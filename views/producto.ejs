@@ -503,7 +503,8 @@
 
         // --------------- declaración de funciones ------------------
 
-        window.carrito= async function carrito(){
+        window.carrito= async function carrito(stock){
+            if(stock==0){alert("no hay stock"); return}
             await fetch("/carrito",{method:"POST",
                 headers:{"Content-Type":"application/json"},
                 body: JSON.stringify({usuario:usuario, id:id,
@@ -702,7 +703,7 @@
                         🛒 Comprar Ahora
                     </button>
 
-                     <button onclick="carrito()" class="btn btn-primary">
+                     <button onclick="carrito(${stock})" class="btn btn-primary">
                         agregar al carrito
                     </button> 
                     <button onclick="window.location.href='/mensajeria/<%= usuario %>'" class="btn btn-secondary">
