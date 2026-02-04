@@ -510,13 +510,14 @@ app.post("/webhook", async function(req, res) {
              }
              if(paymentInfo.status==="approved" && paymentInfo.metadata.carrito){ let envio=0
        
-        for(let producto of paymentInfo.metadata.carrito){ if(producto.producto_envio!==undefined){
+        for(let producto of paymentInfo.metadata.carrito){ let product= await log_products.find({producto_id: producto.producto_id})
+            if(producto.producto_envio!==undefined){
               let precio_envio= Number(producto.producto_envio.match(/\d+/))
 
         if(producto.producto_envio.includes("US$")){precio_envio= precio_envio*dolarAuyu}
             if(precio_envio>envio){envio=precio_envio}}
 
-            if(Number(producto.producto_stock)>0){console.log("hay stock del producto:",producto.producto_nombre);let nuevoproducto= await log_products.findOneAndUpdate({producto_id: producto.producto_id},{producto_stock: `${Number(producto.producto_stock)-1}`})}
+            if(Number(product.producto_stock)>0){let nuevoproducto= await log_products.findOneAndUpdate({producto_id: producto.producto_id},{producto_stock: `${Number(product.producto_stock)-1}`})}
         }
           
 
@@ -530,6 +531,7 @@ app.post("/webhook", async function(req, res) {
     }
             }catch(error) {
             console.error("❌ Error procesando el pago:", error);
+            return res.sendStatus(200)
         }
         
             
