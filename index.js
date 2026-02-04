@@ -518,7 +518,7 @@ app.post("/webhook", async function(req, res) {
                 
              }
              if(paymentInfo.status==="approved" && paymentInfo.metadata.carrito){ let envio=0
-           await log_products.deleteMany({usuario: paymentInfo.external_reference})
+           await log_carrito.deleteMany({usuario: paymentInfo.external_reference})
        
         for(let producto of paymentInfo.metadata.carrito){ let product= (await log_products.find({producto_id: producto.producto_id}))[0]
             if(producto.producto_envio!==undefined){
