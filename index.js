@@ -516,7 +516,7 @@ app.post("/webhook", async function(req, res) {
         if(producto.producto_envio.includes("US$")){precio_envio= precio_envio*dolarAuyu}
             if(precio_envio>envio){envio=precio_envio}}
 
-            if(Number(producto.producto_stock)>0){let nuevoproducto= await log_products.findOneAndUpdate({producto_id: producto.producto_id},{producto_stock: `${Number(producto.producto_stock)-1}`})}
+            if(Number(producto.producto_stock)>0){console.log("hay stock del producto:",producto.producto_nombre);let nuevoproducto= await log_products.findOneAndUpdate({producto_id: producto.producto_id},{producto_stock: `${Number(producto.producto_stock)-1}`})}
         }
           
 
