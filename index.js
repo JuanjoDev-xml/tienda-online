@@ -575,6 +575,7 @@ app.post("/webhook", async function(req, res) {
     app.post("/quitar-del-carrito",async function(req,res){
         await log_carrito.findOneAndDelete({producto_id: Number(req.body.id)})
         res.send("ok")
+        IO.emit("quitar-carrito")
     })
 
     app.get("/compra-carrito",function(req,res){
@@ -620,6 +621,7 @@ IO.on("connection",async function(socket){
     socket.emit("comentarios",comentario)
 
     IO.emit("respuestas",respuestas)
+    IO.emit("quitar-carrito")
 
     console.log("te conectaste")
    
