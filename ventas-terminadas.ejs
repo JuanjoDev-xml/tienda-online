@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ventas</title>
+</head>
+<body>
+   
+    <h2>Tus ventas terminadas:</h2>
+    
+    <div id="ventas"><h3>compras que se recogerán en el local:</h3></div> 
+    <div id="ventas-con-ubicacion"><h3>pedidos:</h3></div>
+
+    <script src="socket.io/socket.io.js"></script>
+    <script type="module">
+
+        //declaraciones
+        let ventas_terminadas= await fetch("/ver-ventas-terminadas").then(function(res){return res.json()})
+        let ventasdiv= document.getElementById("ventas")
+        let ventas_con_ubicaciondiv= document.getElementById("ventas-con-ubicacion")
+
+        //websocket
+
+    
+        //declaracion de funciones
+
+        function ventasuwu(){ventasdiv.innerHTML=""; ventas_con_ubicaciondiv.innerHTML=""
+        for(let venta of ventas_terminadas){
+            if(venta.productos.length===0 && venta.local_ubicacion.includes("no definida") || venta.local_ubicacion===""){
+                ventasdiv.innerHTML+=` <p>comprador:${venta.usuario}</p> <br>
+    <p>producto: ${venta.producto_nombre}</p> <br>
+    <p>precio: ${venta.producto_precio}</p> <br>
+    <p>------------------------------------------</p>` } 
+
+    if(venta.productos.length!==0 && venta.local_ubicacion.includes("no definida")){ 
+        ventasdiv.innerHTML+=` <p>carrito</p> <br>
+        <p>comprador:${venta.usuario}</p> <br>`
+
+        for(let producto of venta.productos){
+
+            ventasdiv.innerHTML +=` <p>producto:${producto.producto_nombre}</p>
+            <p>precio: ${producto.producto_precio}</p><br>`  
+        }
+        ventasdiv.innerHTML+=`
+        <p>------------------------------------------</p>`
+    }
+
+        if(venta.productos.length===0 && !venta.local_ubicacion.includes("no definida")){
+
+            ventas_con_ubicaciondiv.innerHTML+=` <p>comprador:${venta.usuario}</p> <br>
+    <p>producto: ${venta.producto_nombre}</p> <br>
+    <p>precio: ${venta.producto_precio}</p> <br>
+    <p>precio del envio: ${venta.producto_envio}</p> <br>
+    <p>domicilio: ${venta.local_ubicacion}</p> <br>
+    
+    <p>------------------------------------------</p>`  
+        }
+
+        if(venta.productos.length!==0 && !venta.local_ubicacion.includes("no definida")){
+             ventas_con_ubicaciondiv.innerHTML+=` <p>carrito</p> <br>
+        <p>comprador:${venta.usuario}</p> <br>`
+        for(let producto of venta.productos){
+            ventas_con_ubicaciondiv.innerHTML +=` <p>producto:${producto.producto_nombre}</p>
+            <p>precio: ${producto.producto_precio}</p><br>
+           ` 
+        }
+        ventas_con_ubicaciondiv.innerHTML+=` <p>precio del envio: ${venta.producto_envio}</p><br>
+        <p>------------------------------------------</p>` 
+        } 
+            
+        }}
+
+
+        //codigo
+
+        ventasuwu()
+        
+    </script>
+</body>
+</html>

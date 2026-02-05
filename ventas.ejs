@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ventas</title>
+</head>
+<body>
+   
+    <h2>Tus ventas:</h2>
+    
+    <div id="ventas"><h3>compras que se recogerán en el local:</h3></div> 
+    <div id="ventas-con-ubicacion"><h3>pedidos:</h3></div>
+
+    <button onclick="window.location.href='/ventas-terminadas'">ver ventas terminadas</button>
+    <script src="socket.io/socket.io.js"></script>
+    <script type="module">
+
+        //declaraciones
+        let ventas= await fetch("/ver-ventas").then(function(res){return res.json()})
+        console.log(ventas)
+        let socket= io()
+        let ventasdiv= document.getElementById("ventas")
+        let ventas_con_ubicaciondiv= document.getElementById("ventas-con-ubicacion")
+
+        window.eliminarventa= async function eliminarventa(id){
+            await fetch("/eliminar-venta",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({id:id})})
+        }
+        //websocket
+
+        socket.on("compras",async function(){
+            ventas= await fetch("/ver-ventas").then(function(res){return res.json()})
+            ventasuwu()
+        })
+
+        //declaracion de funciones
+
+        function ventasuwu(){ventasdiv.innerHTML=""; ventas_con_ubicaciondiv.innerHTML=""
+        for(let venta of ventas){
+            if(venta.productos.length===0 && venta.local_ubicacion.includes("no definida") || venta.local_ubicacion===""){
+                ventasdiv.innerHTML+=` <p>comprador:${venta.usuario}</p> <br>
+    <p>producto: ${venta.producto_nombre}</p> <br>
+    <p>precio: ${venta.producto_precio}</p> <br>
+    <button onclick='eliminarventa("${venta._id}")'>marcar venta como terminada</button>
+    <p>------------------------------------------</p>` } 
+
+    if(venta.productos.length!==0 && venta.local_ubicacion.includes("no definida")){ 
+        ventasdiv.innerHTML+=` <p>carrito</p> <br>
+        <p>comprador:${venta.usuario}</p> <br>`
+
+        for(let producto of venta.productos){
+
+            ventasdiv.innerHTML +=` <p>producto:${producto.producto_nombre}</p>
+            <p>precio: ${producto.producto_precio}</p><br>`  
+        }
+        ventasdiv.innerHTML+=`<button onclick='eliminarventa("${venta._id}")'>marcar venta como terminada</button>
+        <p>------------------------------------------</p>`
+    }
+
+        if(venta.productos.length===0 && !venta.local_ubicacion.includes("no definida")){
+
+            ventas_con_ubicaciondiv.innerHTML+=` <p>comprador:${venta.usuario}</p> <br>
+    <p>producto: ${venta.producto_nombre}</p> <br>
+    <p>precio: ${venta.producto_precio}</p> <br>
+    <p>precio del envio: ${venta.producto_envio}</p> <br>
+    <p>domicilio: ${venta.local_ubicacion}</p> <br>
+    <button onclick='eliminarventa("${venta._id}")'>marcar venta como terminada</button>
+    
+    <p>------------------------------------------</p>`  
+        }
+
+        if(venta.productos.length!==0 && !venta.local_ubicacion.includes("no definida")){
+             ventas_con_ubicaciondiv.innerHTML+=` <p>carrito</p> <br>
+        <p>comprador:${venta.usuario}</p> <br>`
+        for(let producto of venta.productos){
+            ventas_con_ubicaciondiv.innerHTML +=` <p>producto:${producto.producto_nombre}</p>
+            <p>precio: ${producto.producto_precio}</p><br>
+           ` 
+        }
+        ventas_con_ubicaciondiv.innerHTML+=` <p>precio del envio: ${venta.producto_envio}</p><br>
+        <button onclick='eliminarventa("${venta._id}")'>marcar venta como terminada</button>
+        <p>------------------------------------------</p>` 
+        } 
+            
+        }}
+
+
+        //codigo
+
+        ventasuwu()
+        
+    </script>
+</body>
+</html>
