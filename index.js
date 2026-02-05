@@ -19,6 +19,7 @@ import {MercadoPagoConfig,Preference,Payment} from 'mercadopago'
 import { log_carrito } from './base_de_datos_mongo/mongo-carrito.js'
 import {log_compras} from './base_de_datos_mongo/mongo-compras.js'
 import { log_pagos_id } from './base_de_datos_mongo/mongo_pagos.js'
+import { log_compras_terminadas } from './base_de_datos_mongo/mongo-compras-terminadas.js'
 
 dotenv.config()
 
@@ -496,9 +497,12 @@ app.post("/webhook", async function(req, res) {
     if(!paymentInfo.metadata.carrito){await log_compras.create({usuario: paymentInfo.external_reference,
         producto_nombre: paymentInfo.metadata.producto,
         producto_id:paymentInfo.metadata.id, producto_precio: producto[0].producto_precio, producto_envio: producto[0].producto_envio,
-        local_ubicacion: paymentInfo.metadata.direccion
+        local_ubicacion: paymentInfo.metadata.direccion,
+        Date: Date.now()
+
         
-    }); console.log("se creo el log de la compra")} 
+        
+    }); console.log("se creo el log de la compra")}  IO.emit("compras")
 
 
     
@@ -535,9 +539,10 @@ app.post("/webhook", async function(req, res) {
             await log_compras.create({usuario: paymentInfo.external_reference,
             productos: paymentInfo.metadata.carrito,
          producto_envio: envio,
-        local_ubicacion: paymentInfo.metadata.direccion
+        local_ubicacion: paymentInfo.metadata.direccion,
+        Date: Date.now()
         
-    })}catch(error){console.log("error creando la notificacion del carrito",error)}
+    });IO.emit("compras")}catch(error){console.log("error creando la notificacion del carrito",error)}
     }
             }catch(error) {
             console.error("❌ Error procesando el pago:", error);
@@ -580,6 +585,35 @@ app.post("/webhook", async function(req, res) {
 
     app.get("/compra-carrito",function(req,res){
         res.render("compra-carrito")
+    })
+
+    app.get("/ventas",function(req,res){
+        res.render("ventas")
+    })
+
+    app.get("/ver-ventas",async function(req,res){
+       let ventas= await log_compras.find({})
+       res.json(ventas)
+    })
+
+    app.post("/eliminar-venta",async function(req,res){
+     let compra=   await log_compras.findById( req.body.id)
+     console.log(compra)
+        await log_compras.findByIdAndDelete(req.body.id)
+        await log_compras_terminadas.create(
+            compra.toObject()
+        )
+        IO.emit("compras")
+        res.send("ok")
+    })
+
+    app.get("/ventas-terminadas",function(req,res){
+        res.render("ventas-terminadas")
+    })
+
+    app.get("/ver-ventas-terminadas",async function(req,res){
+     let comprasterminadas=   await log_compras_terminadas.find({})
+     res.json(comprasterminadas)
     })
 //----------------rutas dinámicas--------------------
 
