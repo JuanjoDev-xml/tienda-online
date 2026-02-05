@@ -502,19 +502,26 @@
     </div>
    
 
-    
+    <script src="/socket.io/socket.io.js"></script>    
     <script type="module">
        
         // --------------- Declaraciones -----------------
-        let z=0
         let carrito = await fetch("/ver-carrito").then(res => res.json());
-        setInterval(async() => {
-            carrito = await fetch("/ver-carrito").then(res => res.json()); //sé que es una MUY mala práctica hacer esto, lo ideal sería que para que el carrito se actualice en tiempo real use un websocket, pero amigo me da una paja importante xD
-        }, 1000);
+        let verificador= false
+        let socket=io()
+        let z=0
+            socket.on("quitar-carrito",async function(){  carrito = await fetch("/ver-carrito").then(res => res.json());
+                verificador=true
+                actualizarTotal()
+            })
+           let summaryHTML1=""
+            let itemsHTML=""
+       
         
         let cartContainer = document.getElementById("cart-container");
         console.log("Carrito:", carrito);
         let precio = 0;
+        let precioenvio=0
         let products= await fetch("/verproductos").then(function(res){return res.json()})
         
             const response = await fetch("https://open.er-api.com/v6/latest/USD")
@@ -551,6 +558,8 @@ console.log(dolarAuyu)
         }}
 
         window.quitarproducto = async function quitarproducto(id) {
+            if(verificador===false){return}
+            
             console.log("Quitando producto ID:", id);
             
             const divid = document.getElementById(`item-${id}`);
@@ -569,14 +578,13 @@ console.log(dolarAuyu)
                     
                     // Actualizar carrito
                     carrito = carrito.filter(p => p.producto_id !== id);
-                    actualizarTotal();
                     
                     // Si el carrito queda vacío
                     if (carrito.length === 0) {
                         mostrarCarritoVacio();
                     }
                 }, 300);
-            }}
+            }verificador=false}
             
         
 
@@ -586,8 +594,18 @@ console.log(dolarAuyu)
                 const precioNumerico = Number(producto.producto_precio.match(/\d+/)[0])
                 if (producto.producto_precio.includes("US$")){precioNumerico*40};
                 precio += precioNumerico;
+
+                
             }
+            console.log("precio",precio)
+          let summaryHTML = ` <span id="subtotal" class="summary-value">$${precio}</span>
+                    
             
+            
+            `;
+           console.log("lo incluye?",cartContainer.innerHTML.includes(summaryHTML1));
+                if(carrito.length!==0){ document.getElementById("subtotal").innerHTML=summaryHTML}
+           
             const totalElement = document.getElementById("total-price");
             const itemsCountElement = document.getElementById("items-count");
             
@@ -598,6 +616,8 @@ console.log(dolarAuyu)
             if (itemsCountElement) {
                 itemsCountElement.textContent = carrito.length;
             }
+
+        
         }
 
         function mostrarCarritoVacio() {
@@ -620,7 +640,7 @@ console.log(dolarAuyu)
             }
 
             // Calcular total
-            let precioenvio=0; console.log("carrito:xd",carrito)
+             precioenvio=0; console.log("carrito:xd",carrito)
             for (let producto of carrito) {
                 let precioNumerico = Number(producto.producto_precio.match(/\d+/)[0]);
                 if (producto.producto_precio.includes("US$")){precioNumerico=precioNumerico*dolarAuyu}
@@ -639,7 +659,7 @@ console.log(dolarAuyu)
 } 
             
             // Items Section
-            let itemsHTML = `
+             itemsHTML = `
                 <div class="cart-items-section">
                     <h2 class="section-title">
                         Productos <span class="cart-count" id="items-count">${carrito.length}</span>
@@ -694,13 +714,13 @@ console.log(dolarAuyu)
             itemsHTML += `</div>`;
 
             // Summary Section
-            const summaryHTML = `
+         summaryHTML1 = `
                 <div class="cart-summary">
                     <h3 class="summary-title">Resumen del Pedido</h3>
                     
                     <div class="summary-row">
                         <span class="summary-label">Subtotal</span>
-                        <span class="summary-value">$${precio}</span>
+                        <span id="subtotal" class="summary-value">$${precio}</span>
                     </div>
                     
                     <div class="summary-row">
@@ -732,7 +752,7 @@ console.log(dolarAuyu)
                 </div>
             `;
 
-            cartContainer.innerHTML = itemsHTML + summaryHTML;
+            cartContainer.innerHTML = itemsHTML + summaryHTML1;
         }
 
         // ----------------- Código ----------------------
