@@ -1,81 +1,910 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ventas</title>
-</head>
-<body>
-   
-    <h2>Tus ventas terminadas:</h2>
-    
-    <div id="ventas"><h3>compras que se recogerán en el local:</h3></div> 
-    <div id="ventas-con-ubicacion"><h3>pedidos:</h3></div>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ventas Terminadas - Marketplace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+    --primary: #0A0E27;
+    --primary-light: #1A1F3A;
+    --accent: #00D9FF;
+    --accent-glow: rgba(0, 217, 255, 0.3);
+    --text: #E8E8E8;
+    --text-dim: #A0A0A0;
+    --bg: #050816;
+    --card-bg: #0F1428;
+    --border: rgba(0, 217, 255, 0.2);
+    --shadow: rgba(0, 217, 255, 0.1);
+    --success: #00C853;
+}
 
-    <script src="socket.io/socket.io.js"></script>
-    <script type="module">
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-        //declaraciones
-        let ventas_terminadas= await fetch("/ver-ventas-terminadas").then(function(res){return res.json()})
-        let ventasdiv= document.getElementById("ventas")
-        let ventas_con_ubicaciondiv= document.getElementById("ventas-con-ubicacion")
+body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
 
-        //websocket
+/* Animated background */
+body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(0, 217, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(138, 43, 226, 0.1) 0%, transparent 50%);
+    animation: drift 20s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+}
 
-    
-        //declaracion de funciones
+@keyframes drift {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(5%, -5%) rotate(5deg); }
+    66% { transform: translate(-5%, 5%) rotate(-5deg); }
+}
 
-        function ventasuwu(){ventasdiv.innerHTML=""; ventas_con_ubicaciondiv.innerHTML=""
-        for(let venta of ventas_terminadas){
-            if(venta.productos.length===0 && venta.local_ubicacion.includes("no definida") || venta.local_ubicacion===""){
-                ventasdiv.innerHTML+=` <p>comprador:${venta.usuario}</p> <br>
-    <p>producto: ${venta.producto_nombre}</p> <br>
-    <p>precio: ${venta.producto_precio}</p> <br>
-    <p>------------------------------------------</p>` } 
+/* Container */
+.container {
+    position: relative;
+    z-index: 5;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 5%;
+}
 
-    if(venta.productos.length!==0 && venta.local_ubicacion.includes("no definida")){ 
-        ventasdiv.innerHTML+=` <p>carrito</p> <br>
-        <p>comprador:${venta.usuario}</p> <br>`
+/* Header Title */
+.page-header {
+    text-align: center;
+    padding: 3rem 0 2rem;
+    animation: fadeInUp 0.8s ease;
+}
 
-        for(let producto of venta.productos){
+.page-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--text), var(--success));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
 
-            ventasdiv.innerHTML +=` <p>producto:${producto.producto_nombre}</p>
-            <p>precio: ${producto.producto_precio}</p><br>`  
-        }
-        ventasdiv.innerHTML+=`
-        <p>------------------------------------------</p>`
+.page-subtitle {
+    color: var(--text-dim);
+    font-size: 1.1rem;
+}
+
+.badge-completed {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(0, 200, 83, 0.15);
+    border: 1px solid var(--success);
+    color: var(--success);
+    padding: 0.5rem 1.2rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-top: 1rem;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Back Button */
+.btn-back {
+    font-family: 'Outfit', sans-serif;
+    background: var(--card-bg);
+    color: var(--text);
+    border: 2px solid var(--border);
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 2rem;
+    text-decoration: none;
+}
+
+.btn-back:hover {
+    background: var(--primary-light);
+    border-color: var(--accent);
+    transform: translateX(-5px);
+    box-shadow: 0 4px 20px var(--shadow);
+}
+
+/* Section Headers */
+.section-wrapper {
+    margin-bottom: 3rem;
+    animation: fadeIn 0.6s ease backwards;
+}
+
+.section-header {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    padding: 1.5rem 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.section-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--success), var(--accent));
+}
+
+.section-header h3 {
+    font-family: 'Sora', sans-serif;
+    color: var(--success);
+    font-size: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.section-icon {
+    font-size: 1.8rem;
+}
+
+/* Ventas Container */
+#ventas, #ventas-con-ubicacion {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 16px 16px;
+    padding: 2rem;
+    min-height: 200px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Venta Card */
+.venta-card {
+    background: var(--primary-light);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.8rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    position: relative;
+    animation: cardAppear 0.6s ease backwards;
+    opacity: 0.8;
+}
+
+.venta-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--success), rgba(0, 200, 83, 0.3));
+    border-radius: 12px 12px 0 0;
+}
+
+.venta-card:hover {
+    opacity: 1;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0, 200, 83, 0.15);
+}
+
+.venta-card.carrito {
+    background: linear-gradient(135deg, var(--primary-light) 0%, rgba(0, 200, 83, 0.05) 100%);
+}
+
+@keyframes cardAppear {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 0.8;
+        transform: scale(1);
+    }
+}
+
+/* Badge Carrito */
+.badge-carrito {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--success), #00E676);
+    color: var(--primary);
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    letter-spacing: 0.5px;
+}
+
+/* Venta Info */
+.venta-info {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.8rem;
+}
+
+.venta-label {
+    font-weight: 600;
+    color: var(--text);
+    min-width: 120px;
+    font-size: 0.95rem;
+}
+
+.venta-value {
+    color: var(--text-dim);
+    flex: 1;
+}
+
+/* Producto Item */
+.producto-item {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--success);
+    border-radius: 8px;
+    padding: 1.2rem;
+    margin: 1rem 0;
+}
+
+/* Status Badge */
+.status-completed {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(0, 200, 83, 0.15);
+    border: 1px solid var(--success);
+    color: var(--success);
+    padding: 0.6rem 1.2rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-dim);
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+/* Stats Summary */
+.stats-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0 3rem;
+    animation: fadeInUp 0.8s ease 0.2s backwards;
+}
+
+.stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px var(--shadow);
+    border-color: var(--success);
+}
+
+.stat-number {
+    font-family: 'Sora', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--success);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+}
+
+/* Pagination */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 3rem 0 2rem;
+    flex-wrap: wrap;
+    animation: fadeInUp 0.8s ease 0.4s backwards;
+}
+
+.pagination-btn {
+    font-family: 'Outfit', sans-serif;
+    background: var(--card-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.8rem 1.2rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    min-width: 45px;
+    text-align: center;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: var(--primary-light);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px var(--shadow);
+}
+
+.pagination-btn.active {
+    background: linear-gradient(135deg, var(--accent), #0099CC);
+    color: var(--primary);
+    border-color: var(--accent);
+    box-shadow: 0 4px 15px var(--accent-glow);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.pagination-ellipsis {
+    color: var(--text-dim);
+    padding: 0.8rem 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 2rem;
     }
 
-        if(venta.productos.length===0 && !venta.local_ubicacion.includes("no definida")){
+    .page-subtitle {
+        font-size: 1rem;
+    }
 
-            ventas_con_ubicaciondiv.innerHTML+=` <p>comprador:${venta.usuario}</p> <br>
-    <p>producto: ${venta.producto_nombre}</p> <br>
-    <p>precio: ${venta.producto_precio}</p> <br>
-    <p>precio del envio: ${venta.producto_envio}</p> <br>
-    <p>domicilio: ${venta.local_ubicacion}</p> <br>
+    .section-header h3 {
+        font-size: 1.2rem;
+    }
+
+    .venta-card {
+        padding: 1.5rem;
+    }
+
+    .venta-label {
+        min-width: 100px;
+        font-size: 0.9rem;
+    }
+
+    .btn-back {
+        padding: 0.8rem 1.5rem;
+        font-size: 0.9rem;
+    }
+
+    .stats-summary {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 1rem 4%;
+    }
+
+    .venta-info {
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+    .venta-label {
+        min-width: auto;
+    }
+
+    .section-header {
+        padding: 1.2rem 1.5rem;
+    }
+
+    #ventas, #ventas-con-ubicacion {
+        padding: 1.5rem;
+    }
+
+    .producto-item {
+        padding: 1rem;
+    }
+
+    .stats-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .pagination-container {
+        gap: 0.4rem;
+    }
+
+    .pagination-btn {
+        padding: 0.7rem 1rem;
+        font-size: 0.9rem;
+        min-width: 40px;
+    }
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <a href="javascript:history.back()" class="btn-back">
+        ← Volver
+    </a>
+
+    <div class="page-header">
+        <h1 class="page-title">✓ Ventas Terminadas</h1>
+        <p class="page-subtitle">Historial de pedidos completados</p>
+        <span class="badge-completed">✓ Completadas</span>
+    </div>
+
+    <div class="stats-summary" id="stats-summary"></div>
     
-    <p>------------------------------------------</p>`  
-        }
+    <div class="section-wrapper" style="animation-delay: 0.1s">
+        <div class="section-header">
+            <h3><span class="section-icon">🏪</span> Retiro en Local</h3>
+        </div>
+        <div id="ventas"></div>
+    </div>
+    
+    <div class="section-wrapper" style="animation-delay: 0.2s">
+        <div class="section-header">
+            <h3><span class="section-icon">🚚</span> Pedidos con Envío</h3>
+        </div>
+        <div id="ventas-con-ubicacion"></div>
+    </div>
 
-        if(venta.productos.length!==0 && !venta.local_ubicacion.includes("no definida")){
-             ventas_con_ubicaciondiv.innerHTML+=` <p>carrito</p> <br>
-        <p>comprador:${venta.usuario}</p> <br>`
-        for(let producto of venta.productos){
-            ventas_con_ubicaciondiv.innerHTML +=` <p>producto:${producto.producto_nombre}</p>
-            <p>precio: ${producto.producto_precio}</p><br>
-           ` 
-        }
-        ventas_con_ubicaciondiv.innerHTML+=` <p>precio del envio: ${venta.producto_envio}</p><br>
-        <p>------------------------------------------</p>` 
+    <div class="pagination-container" id="pagination"></div>
+</div>
+
+<script src="socket.io/socket.io.js"></script>
+<script type="module">
+//declaraciones
+let ventas_terminadas= await fetch("/ver-ventas-terminadas").then(function(res){return res.json()})
+let ventasdiv= document.getElementById("ventas")
+let ventas_con_ubicaciondiv= document.getElementById("ventas-con-ubicacion")
+
+// Obtener cotización del dólar (UYU)
+const response = await fetch("https://open.er-api.com/v6/latest/USD");
+const data = await response.json();
+let valor_dolar = data.rates.UYU
+
+// Configuración de paginación
+const ITEMS_PER_PAGE = 5  // Cambiado a 5 para ver la paginación más fácilmente
+let currentPage = 1
+let totalPages = 1
+
+//declaracion de funciones
+window.cambiarPagina = function(nuevaPagina) {
+    if (nuevaPagina < 1 || nuevaPagina > totalPages) return
+    currentPage = nuevaPagina
+    ventasuwu()
+}
+
+function ventasuwu(){
+    // Calcular el total de páginas
+    totalPages = Math.ceil(ventas_terminadas.length / ITEMS_PER_PAGE)
+    
+    // Calcular índices para la página actual
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+    const endIndex = startIndex + ITEMS_PER_PAGE
+    const ventasPagina = ventas_terminadas.slice(startIndex, endIndex)
+    
+    ventasdiv.innerHTML=""
+    ventas_con_ubicaciondiv.innerHTML=""
+    
+    let ventasLocalesPagina = 0
+    let ventasEnvioPagina = 0
+    let cardDelay = 0
+    
+    for(let venta of ventasPagina){
+        // Ventas sin ubicación (retiro en local)
+        if(venta.productos.length===0 && (venta.local_ubicacion.includes("no definida") || venta.local_ubicacion==="")){
+            ventasLocalesPagina++
+            ventasdiv.innerHTML+=`
+                <div class="venta-card" style="animation-delay: ${cardDelay * 0.05}s">
+                    <div class="venta-info">
+                        <span class="venta-label">👤 Comprador:</span>
+                        <span class="venta-value">${venta.usuario}</span>
+                    </div>
+                    <div class="venta-info">
+                        <span class="venta-label">📦 Producto:</span>
+                        <span class="venta-value">${venta.producto_nombre}</span>
+                    </div>
+                    <div class="venta-info">
+                        <span class="venta-label">💰 Precio:</span>
+                        <span class="venta-value">$${venta.producto_precio}</span>
+                    </div>
+                    <span class="status-completed">✓ Completada</span>
+                </div>
+            `
+            cardDelay++
         } 
-            
-        }}
-
-
-        //codigo
-
-        ventasuwu()
         
-    </script>
+        // Carritos sin ubicación
+        if(venta.productos.length!==0 && venta.local_ubicacion.includes("no definida")){ 
+            ventasLocalesPagina++
+            
+            // Función auxiliar para parsear precios con conversión de dólar
+            function parsearPrecio(precio) {
+                if (!precio) return 0
+                let precioStr = String(precio)
+                
+                // Si el precio incluye "US$", hacer conversión
+                if(precioStr.includes("US$")){
+                    let precioLimpio = precioStr.replace(/[^0-9.-]/g, '')
+                    let precioNumero = parseFloat(precioLimpio) || 0
+                    return precioNumero * valor_dolar
+                } else {
+                    // Si no incluye US$, es peso uruguayo directo
+                    let precioLimpio = precioStr.replace(/[^0-9.-]/g, '')
+                    return parseFloat(precioLimpio) || 0
+                }
+            }
+            
+            // Calcular precio total del carrito
+            let precioTotal = 0
+            for(let producto of venta.productos){
+                precioTotal += parsearPrecio(producto.producto_precio)
+            }
+            
+            ventasdiv.innerHTML+=`
+                <div class="venta-card carrito" style="animation-delay: ${cardDelay * 0.05}s">
+                    <span class="badge-carrito">🛒 CARRITO</span>
+                    <div class="venta-info">
+                        <span class="venta-label">👤 Comprador:</span>
+                        <span class="venta-value">${venta.usuario}</span>
+                    </div>
+            `
+            for(let producto of venta.productos){
+                ventasdiv.innerHTML +=`
+                    <div class="producto-item">
+                        <div class="venta-info">
+                            <span class="venta-label">📦 Producto:</span>
+                            <span class="venta-value">${producto.producto_nombre}</span>
+                        </div>
+                        <div class="venta-info">
+                            <span class="venta-label">💰 Precio:</span>
+                            <span class="venta-value">${producto.producto_precio}</span>
+                        </div>
+                    </div>
+                `  
+            }
+            ventasdiv.innerHTML+=`
+                    <div class="venta-info" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                        <span class="venta-label">💵 Total:</span>
+                        <span class="venta-value" style="color: var(--success); font-weight: 700; font-size: 1.1rem;">$${precioTotal.toFixed(2)} UYU</span>
+                    </div>
+                    <span class="status-completed">✓ Completada</span>
+                </div>
+            `
+            cardDelay++
+        }
+        
+        // Ventas con ubicación (envíos)
+        if(venta.productos.length===0 && !venta.local_ubicacion.includes("no definida")){
+            ventasEnvioPagina++
+            ventas_con_ubicaciondiv.innerHTML+=`
+                <div class="venta-card" style="animation-delay: ${cardDelay * 0.05}s">
+                    <div class="venta-info">
+                        <span class="venta-label">👤 Comprador:</span>
+                        <span class="venta-value">${venta.usuario}</span>
+                    </div>
+                    <div class="venta-info">
+                        <span class="venta-label">📦 Producto:</span>
+                        <span class="venta-value">${venta.producto_nombre}</span>
+                    </div>
+                    <div class="venta-info">
+                        <span class="venta-label">💰 Precio:</span>
+                        <span class="venta-value">$${venta.producto_precio}</span>
+                    </div>
+                    <div class="venta-info">
+                        <span class="venta-label">🚚 Envío:</span>
+                        <span class="venta-value">$${venta.producto_envio}</span>
+                    </div>
+                    <div class="venta-info">
+                        <span class="venta-label">📍 Domicilio:</span>
+                        <span class="venta-value">${venta.local_ubicacion}</span>
+                    </div>
+                    <span class="status-completed">✓ Completada</span>
+                </div>
+            `
+            cardDelay++
+        }
+        
+        // Carritos con ubicación
+        if(venta.productos.length!==0 && !venta.local_ubicacion.includes("no definida")){
+            ventasEnvioPagina++
+            
+            // Función auxiliar para parsear precios con conversión de dólar
+            function parsearPrecio(precio) {
+                if (!precio) return 0
+                let precioStr = String(precio)
+                
+                // Si el precio incluye "US$", hacer conversión
+                if(precioStr.includes("US$")){
+                    let precioLimpio = precioStr.replace(/[^0-9.-]/g, '')
+                    let precioNumero = parseFloat(precioLimpio) || 0
+                    return precioNumero * valor_dolar
+                } else {
+                    // Si no incluye US$, es peso uruguayo directo
+                    let precioLimpio = precioStr.replace(/[^0-9.-]/g, '')
+                    return parseFloat(precioLimpio) || 0
+                }
+            }
+            
+            // Calcular precio total del carrito
+            let precioTotal = 0
+            for(let producto of venta.productos){
+                precioTotal += parsearPrecio(producto.producto_precio)
+            }
+            
+            ventas_con_ubicaciondiv.innerHTML+=`
+                <div class="venta-card carrito" style="animation-delay: ${cardDelay * 0.05}s">
+                    <span class="badge-carrito">🛒 CARRITO</span>
+                    <div class="venta-info">
+                        <span class="venta-label">👤 Comprador:</span>
+                        <span class="venta-value">${venta.usuario}</span>
+                    </div>
+            `
+            for(let producto of venta.productos){
+                ventas_con_ubicaciondiv.innerHTML +=`
+                    <div class="producto-item">
+                        <div class="venta-info">
+                            <span class="venta-label">📦 Producto:</span>
+                            <span class="venta-value">${producto.producto_nombre}</span>
+                        </div>
+                        <div class="venta-info">
+                            <span class="venta-label">💰 Precio:</span>
+                            <span class="venta-value">${producto.producto_precio}</span>
+                        </div>
+                    </div>
+                ` 
+            }
+            
+            let costoEnvio = parsearPrecio(venta.producto_envio)
+            let totalConEnvio = precioTotal + costoEnvio
+            
+            ventas_con_ubicaciondiv.innerHTML+=`
+                    <div class="venta-info" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                        <span class="venta-label">💵 Subtotal:</span>
+                        <span class="venta-value" style="font-weight: 600;">$${precioTotal.toFixed(2)} UYU</span>
+                    </div>
+                    <div class="venta-info">
+                        <span class="venta-label">🚚 Envío:</span>
+                        <span class="venta-value">$${costoEnvio.toFixed(2)} UYU</span>
+                    </div>
+                    <div class="venta-info" style="padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
+                        <span class="venta-label">💵 Total:</span>
+                        <span class="venta-value" style="color: var(--success); font-weight: 700; font-size: 1.1rem;">$${totalConEnvio.toFixed(2)} UYU</span>
+                    </div>
+                    <div class="venta-info">
+                        <span class="venta-label">📍 Domicilio:</span>
+                        <span class="venta-value">${venta.local_ubicacion}</span>
+                    </div>
+                    <span class="status-completed">✓ Completada</span>
+                </div>
+            `
+            cardDelay++
+        } 
+    }
+    
+    // Contar totales (de todas las ventas, no solo de la página actual)
+    let totalLocales = 0
+    let totalEnvios = 0
+    let dineroGanado = 0
+    
+    // Función auxiliar para parsear precios con conversión de dólar
+    function parsearPrecio(precio) {
+        if (!precio) return 0
+        let precioStr = String(precio)
+        
+        // Si el precio incluye "US$", hacer conversión
+        if(precioStr.includes("US$")){
+            let precioLimpio = precioStr.replace(/[^0-9.-]/g, '')
+            let precioNumero = parseFloat(precioLimpio) || 0
+            return precioNumero * valor_dolar
+        } else {
+            // Si no incluye US$, es peso uruguayo directo
+            let precioLimpio = precioStr.replace(/[^0-9.-]/g, '')
+            return parseFloat(precioLimpio) || 0
+        }
+    }
+    
+    for(let venta of ventas_terminadas){
+        if(venta.local_ubicacion.includes("no definida") || venta.local_ubicacion===""){
+            totalLocales++
+        } else {
+            totalEnvios++
+        }
+        
+        // Calcular dinero ganado
+        if(venta.productos.length === 0){
+            // Venta individual
+            dineroGanado += parsearPrecio(venta.producto_precio)
+            if(venta.producto_envio){
+                dineroGanado += parsearPrecio(venta.producto_envio)
+            }
+        } else {
+            // Carrito
+            for(let producto of venta.productos){
+                dineroGanado += parsearPrecio(producto.producto_precio)
+            }
+            if(venta.producto_envio){
+                dineroGanado += parsearPrecio(venta.producto_envio)
+            }
+        }
+    }
+    
+    // Estadísticas
+    const statsContainer = document.getElementById("stats-summary")
+    statsContainer.innerHTML = `
+        <div class="stat-card">
+            <div class="stat-number">${ventas_terminadas.length}</div>
+            <div class="stat-label">Total Completadas</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">${totalLocales}</div>
+            <div class="stat-label">Retiro en Local</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">${totalEnvios}</div>
+            <div class="stat-label">Con Envío</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">$${dineroGanado.toFixed(2)}</div>
+            <div class="stat-label">Dinero Ganado (UYU)</div>
+        </div>
+    `
+    
+    // Mensajes si no hay ventas en esta página
+    if(ventasLocalesPagina === 0){
+        ventasdiv.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">🏪</div>
+                <p>No hay ventas de retiro en local en esta página</p>
+            </div>
+        `
+    }
+    if(ventasEnvioPagina === 0){
+        ventas_con_ubicaciondiv.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">🚚</div>
+                <p>No hay pedidos con envío en esta página</p>
+            </div>
+        `
+    }
+    
+    // Actualizar paginación
+    renderPagination()
+    
+    // Scroll al inicio suave
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function renderPagination() {
+    const paginationContainer = document.getElementById("pagination")
+    
+    console.log("Total pages:", totalPages)
+    console.log("Current page:", currentPage)
+    
+    if (totalPages <= 1) {
+        paginationContainer.innerHTML = ""
+        return
+    }
+    
+    let paginationHTML = ""
+    
+    // Botón anterior
+    paginationHTML += `
+        <button class="pagination-btn" onclick="cambiarPagina(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+            ← Anterior
+        </button>
+    `
+    
+    // Lógica para mostrar números de página
+    const maxButtons = 7 // Máximo de botones numéricos a mostrar
+    let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2))
+    let endPage = Math.min(totalPages, startPage + maxButtons - 1)
+    
+    // Ajustar si estamos cerca del final
+    if (endPage - startPage < maxButtons - 1) {
+        startPage = Math.max(1, endPage - maxButtons + 1)
+    }
+    
+    // Primera página
+    if (startPage > 1) {
+        paginationHTML += `
+            <button class="pagination-btn" onclick="cambiarPagina(1)">1</button>
+        `
+        if (startPage > 2) {
+            paginationHTML += `<span class="pagination-ellipsis">...</span>`
+        }
+    }
+    
+    // Páginas intermedias
+    for (let i = startPage; i <= endPage; i++) {
+        paginationHTML += `
+            <button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="cambiarPagina(${i})">
+                ${i}
+            </button>
+        `
+    }
+    
+    // Última página
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            paginationHTML += `<span class="pagination-ellipsis">...</span>`
+        }
+        paginationHTML += `
+            <button class="pagination-btn" onclick="cambiarPagina(${totalPages})">${totalPages}</button>
+        `
+    }
+    
+    // Botón siguiente
+    paginationHTML += `
+        <button class="pagination-btn" onclick="cambiarPagina(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+            Siguiente →
+        </button>
+    `
+    
+    paginationContainer.innerHTML = paginationHTML
+}
+
+//codigo
+ventasuwu()
+</script>
 </body>
 </html>
