@@ -20,6 +20,7 @@ import { log_carrito } from './base_de_datos_mongo/mongo-carrito.js'
 import {log_compras} from './base_de_datos_mongo/mongo-compras.js'
 import { log_pagos_id } from './base_de_datos_mongo/mongo_pagos.js'
 import { log_compras_terminadas } from './base_de_datos_mongo/mongo-compras-terminadas.js'
+import  {log_ofertas2x1}  from './base_de_datos_mongo/mongo-ofertas.js'
 
 dotenv.config()
 
@@ -120,7 +121,7 @@ try{let comparacion= await bcryptjs.compare(req.body.contraseña, cuenta[0].cont
        
 })
 
-app.get("/tienda",function(req,res){ if(req.session.usuario===undefined){ return res.send("login.html",{root:import.meta.dirname})}
+app.get("/tienda",function(req,res){ if(req.session.usuario===undefined){ res.sendFile("login.html",{root:import.meta.dirname}); return}
     res.render("tienda",{nombre: req.session.usuario})
 })
 
@@ -348,10 +349,14 @@ app.post("/comprar",async function(req,res){console.log("comprar")
     let precio1= Number(producto[0].producto_precio.match(/\d+/))
     let unidad=producto[0].producto_precio.match(/[^\d]+/g).toString()
     console.log("precio1:",precio1)
+    let precioenvio;
+    let unidadenvio;
+    if(producto[0].producto_envio){
+           precioenvio= Number(producto[0].producto_envio.match(/\d+/))
+    unidadenvio=producto[0].producto_precio.match(/[^\d]+/g).toString()
 
-    let precioenvio= Number(producto[0].producto_envio.match(/\d+/))
-    let unidadenvio=producto[0].producto_precio.match(/[^\d]+/g).toString()
-
+    }
+  
     if(req.body.envio==="si"){
         if(unidad.toUpperCase()==="US$" && unidadenvio==="$"){precioenvio= precioenvio/dolarAuyu}
         else if(unidad==="$" && unidadenvio.toUpperCase()==="US$"){precioenvio= precioenvio*dolarAuyu}
@@ -612,8 +617,22 @@ app.post("/webhook", async function(req, res) {
     })
 
     app.get("/ver-ventas-terminadas",async function(req,res){
-     let comprasterminadas=   await log_compras_terminadas.find({})
+     let comprasterminadas= await log_compras_terminadas.find({})
      res.json(comprasterminadas)
+    })
+
+    app.post("/crear-oferta-2x1",async function(req,res){
+        try{
+       let producto1= (await log_products.find({producto_id: Number(req.session.producto_id)}))[0]
+       let producto2= (await log_products.find({producto_nombre: req.body.producto2}))
+       if(producto2.length===0){res.send("ingrese bien el nombre del producto"); return}
+        await log_ofertas2x1.create({productos:[producto1,producto2[0]],
+            precio: producto1.producto_precio
+        })}
+        catch(error){console.log("error creando la oferta",error)}
+
+        res.sendStatus(200)
+
     })
 //----------------rutas dinámicas--------------------
 
