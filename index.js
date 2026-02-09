@@ -344,7 +344,15 @@ app.get("/compra",function(req,res){
     res.render("compra")
 })
 app.post("/comprar",async function(req,res){console.log("comprar")
+    let ofertas2x1= await log_ofertas2x1.find({})
+
+   
     let producto= await log_products.find({producto_id: req.session.producto_id})
+     for(let oferta of ofertas2x1){
+        if(oferta.productos[0].producto_id===producto[0].producto_id){
+            producto.push(oferta.productos[1]); return
+        }
+    }
     console.log("producto:",producto)
     let precio1= Number(producto[0].producto_precio.match(/\d+/))
     let unidad=producto[0].producto_precio.match(/[^\d]+/g).toString()
@@ -366,7 +374,7 @@ app.post("/comprar",async function(req,res){console.log("comprar")
     async function preferencia(unidad){if(Number(producto[0].producto_stock)>0){
     try{
         const body= {
-            items:[{title: producto[0].producto_nombre,
+            items:[{title: producto[0].producto_nombre+" "+ producto[1].producto_nombre + " (oferta 2x1)",
                 unit_price: precio1,
                 quantity:1,
                 currency_id:unidad
@@ -398,6 +406,7 @@ app.post("/comprar",async function(req,res){console.log("comprar")
 
 app.post("/comprar-carrito",async function(req,res){
     let z=0
+    let i=0
     let carrito= await log_carrito.find({usuario: req.session.usuario})
     console.log(carrito)
     let coste_envio=0
@@ -405,6 +414,16 @@ app.post("/comprar-carrito",async function(req,res){
     let products= await log_products.find({})
 let precio_envio=0
     let preciototal=0
+
+    let ofertas2x1= await log_ofertas2x1.find({})
+    while(i<carrito.length){
+        for(let ofertas of ofertas2x1){
+            if(ofertas.productos[0].producto_id===carrito[i].producto_id){
+                carrito.push(ofertas.productos[1])
+            }
+        }
+        ++i
+    }
 
       while(z<products.length){
                 for(let productos of carrito){if(products[z].producto_id===productos.producto_id && products[z].producto_stock==0){
@@ -633,6 +652,21 @@ app.post("/webhook", async function(req, res) {
 
         res.sendStatus(200)
 
+    })
+
+    app.get("/ver-ofertas2x1",async function(req,res){
+        let ofertas2x1= await log_ofertas2x1.find({})
+        res.json(ofertas2x1)
+    })
+
+    app.post("/borrar-oferta2x1",async function(req,res){
+        let ofertas2x1= await log_ofertas2x1.find({})
+        for(let oferta2x1 of ofertas2x1){
+            if(oferta2x1.productos[0].producto_id===req.body.producto_id){
+                await log_ofertas2x1.findByIdAndDelete(oferta2x1._id)
+            }
+        }
+        res.sendStatus(200); return
     })
 //----------------rutas dinámicas--------------------
 
