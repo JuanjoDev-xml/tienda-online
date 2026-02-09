@@ -440,7 +440,14 @@
                         <input type="text" id="editarstock" placeholder="Nuevo stock" class="form-input">
                         <button onclick="stock()" class="btn btn-primary">Guardar</button>
                     </div>
+
                 </div>
+
+                 <div class="edit-section">
+                        <h3 class="section-title">Ubicación del local</h3>
+                    <input type="text" id="editar-ubicacion" placeholder="Nueva ubicación del local" class="form-input">
+                <button onclick="editarubicacion()" class="btn btn-primary">guardar</button>
+                    </div>
 
                 <!-- Delete Product -->
                 <div class="edit-section">
@@ -449,6 +456,21 @@
                 </div>
             </div>
         </div>
+
+          <div class="edit-section">
+                    <h3 class="section-title">🗑️ Crear oferta 2x1</h3>
+                      <input type="text" id="oferta-2x1" placeholder="ingrese el producto para la oferta" class="form-input" size="25px">
+                    <button onclick="oferta2x1()" class="btn btn-primary">Crear oferta 2x1</button>
+                </div>
+            </div>
+        </div>
+
+         <div class="edit-section">
+                    <h3 class="section-title" id="titulo">🗑️ borrar oferta</h3>
+                    <button onclick="borraroferta2x1()" class="btn btn-danger" id="borrar-oferta">borraroferta</button>
+                </div>
+
+        
 
         <!-- Comments Section -->
         <div class="comments-section">
@@ -465,6 +487,14 @@
         let id = "<%= id %>";
         let currentImageIndex = 0;
         let productImages = [];
+        let hay_oferta=false
+        let ofertas2x1= await fetch("/ver-ofertas2x1").then(function(res){return res.json()})
+
+
+        let productoreal;
+         for(let producto of productos){
+            if (producto.producto_id == "<%= id %>") {productoreal= producto.producto_id}
+         }
 
         console.log("id", id)
 
@@ -571,6 +601,25 @@
                     }
                 }
             }
+        }   
+        // funciones generales
+
+        window.borraroferta2x1= async function borraroferta2x1(){
+            await fetch("/borrar-oferta2x1",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({producto_id: productoreal })})
+        }
+
+        window.oferta2x1= async function oferta2x1(){
+            await fetch("/crear-oferta-2x1",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({producto2: document.getElementById("oferta-2x1").value})}).then(function(res){
+            return res.text()}).then(function(res){if(res!=="OK"){alert(res)}
+        else if(res==="OK"){alert("oferta creada existosamente")}})
+        }
+
+        window.editarubicacion= async function editarubicacion(){
+            document.getElementById("local").textContent="ubicación del local: "+document.getElementById("editar-ubicacion").value
+            await fetch("/editar-ubicacion",{method:"POST",headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({ubicacion: document.getElementById("editar-ubicacion").value,id:id})})
         }
 
         window.enviar = async function enviar() {
@@ -631,7 +680,17 @@
             let nombre = producto.producto_nombre;
             let precio = "precio: " + producto.producto_precio;
             let descripcion = producto.producto_descripcion;
-            let stock = "stock: " + producto.producto_stock;
+            let stock = "stock: " + producto.producto_stock; 
+            let ubicacion= "ubicación del local: "+ producto.local_ubicacion
+            if(producto.local_ubicacion===undefined){ubicacion="ubicación del local no especificada"}
+
+              for(let oferta2x1 of ofertas2x1){
+               if(oferta2x1.productos[0].producto_id==producto.producto_id){nombre+="(oferta2x1)";
+               hay_oferta=true
+                descripcion=`pague el producto ${producto.producto_nombre} y se lleva gratis el producto ${oferta2x1.productos[1].producto_nombre}. Descripción del producto: `+ descripcion
+               }
+            }
+            
 
             // Procesar todas las imágenes
             productImages = [];
@@ -689,6 +748,7 @@
                 <p class="product-price" id="precio">${precio}</p>
                 <p class="product-desc" id="descripcion">${descripcion}</p>
                 <p class="product-stock" id="stock">${stock}</p>
+                <p class="product-desc" id="local">${ubicacion}</p>
             `;
 
             // Hacer las funciones globales
@@ -723,6 +783,10 @@
                 });
                 window.location.href = "/tienda/admin";
             }
+        }
+
+        if(hay_oferta===false){document.getElementById("borrar-oferta").remove()
+            document.getElementById("titulo").remove()
         }
     </script>
 </body>
