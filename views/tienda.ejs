@@ -708,6 +708,8 @@
         let a = 0;
         let nombre = "<%= nombre %>";
 
+        let ofertas2x1= await fetch("/ver-ofertas2x1").then(function(res){return res.json()})
+
         let notificaciones1 = await fetch("/notificaciones-comprador")
             .then(res => res.json());
         
@@ -863,10 +865,17 @@
 
         function mostrarproductos(i) {
             if (productos[i].null === false) {
-                const nombre = productos[i].producto_nombre;
+                let nombre = productos[i].producto_nombre;
                 const precio = productos[i].producto_precio;
-                const descripcion = productos[i].producto_descripcion;
+                let descripcion = productos[i].producto_descripcion;
                 const contenedor = document.getElementById("contenedor");
+
+                for(let oferta of ofertas2x1){
+                    if(oferta.productos[0].producto_id===productos[i].producto_id){
+                        nombre+= "(2x1)"
+                        descripcion=`llévese gratis el producto ${oferta.productos[1].producto_nombre} pagando el producto: ${productos[i].producto_nombre}`
+                    }
+                }
                 
                 let imagenSrc = '';
                 
