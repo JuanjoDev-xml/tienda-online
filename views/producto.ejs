@@ -501,6 +501,9 @@
         let currentImageIndex = 0;
         let productImages = [];
 
+        let ofertas2x1= await fetch("/ver-ofertas2x1").then(function(res){return res.json()})
+        console.log("ofertas",ofertas2x1)
+
         // --------------- declaración de funciones ------------------
 
         window.carrito= async function carrito(stock){
@@ -614,16 +617,23 @@
         }
 
         function mostrarproductos(producto) {
+           
             const contenedor = document.getElementById("contenedor");
             const productInfo = document.getElementById("product-info");
-            const nombre = producto.producto_nombre;
-            const precio = producto.producto_precio;
-            const descripcion = producto.producto_descripcion;
+            let nombre = producto.producto_nombre;
+            let precio = producto.producto_precio;
+            let descripcion = producto.producto_descripcion;
             const stock = producto.producto_stock;
             let envio= producto.producto_envio
             if(envio===undefined){envio="gratis"}
             let ubicacion= producto.local_ubicacion
             if(ubicacion===undefined){ubicacion= "no especificada"}
+
+             for(let oferta2x1 of ofertas2x1){
+               if(oferta2x1.productos[0].producto_id==producto.producto_id){nombre+="(oferta2x1)";
+                descripcion=`pague el producto ${producto.producto_nombre} y se lleva gratis el producto ${oferta2x1.productos[1].producto_nombre}. Descripción del producto: `+ descripcion
+               }
+            }
             
 
             // Procesar todas las imágenes
