@@ -1,10 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4093661401182951"
-     crossorigin="anonymous"></script>
-    <meta name="google-adsense-account" content="ca-pub-4093661401182951">
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Administración</title>
@@ -641,6 +637,7 @@
             <button onclick="cerrarsesion()" class="btn btn-secondary">
                 🚪 Cerrar Sesión
             </button>
+            <button class="btn btn-secondary" onclick="window.location.href='/ventas'">ventas</button>
         </div>
     </header>
 
@@ -668,6 +665,7 @@
         let productos = await fetch("/verproductos").then(res => res.json());
         let i = 0;
         let a = 0;
+        let ofertas2x1= await fetch("/ver-ofertas2x1").then(function(res){return res.json()})
 
         let notificaciones1 = await fetch("/notificaciones-vendedor")
             .then(res => res.json());
@@ -835,9 +833,17 @@
         function mostrarproductos(i) {
             if (productos[i].null === false) {
                 const contenedor = document.getElementById("contenedor");
-                const nombre = productos[i].producto_nombre;
+                let nombre = productos[i].producto_nombre;
                 const precio = productos[i].producto_precio;
-                const descripcion = productos[i].producto_descripcion;
+                let descripcion = productos[i].producto_descripcion;
+
+                  for(let oferta of ofertas2x1){
+                    if(oferta.productos[0].producto_id===productos[i].producto_id){
+                        nombre+= "(2x1)"
+                        descripcion=`llévese gratis el producto ${oferta.productos[1].producto_nombre} pagando el producto: ${productos[i].producto_nombre}`
+                    }
+                }
+
 
                 let imagenSrc = `/${productos[i].producto_imagen}`;
                 if (productos[i].producto_imagen[0]?.filename) {
