@@ -507,7 +507,7 @@
        
         // --------------- Declaraciones -----------------
         let carrito = await fetch("/ver-carrito").then(res => res.json());
-        let verificador= false
+        let verificador= true
         let socket=io()
         let z=0
         let i=0
@@ -526,12 +526,13 @@
            let summaryHTML1=""
             let itemsHTML=""
             let hay_oferta= false
+            let num_ofertas=0
             
         let ofertas2x1= await fetch("/ver-ofertas2x1").then(function(res){return res.json()})
             if(ofertas2x1.length!==0){
                   while(i<carrito.length){
             for(let oferta of ofertas2x1){if(oferta.productos[0].producto_id===carrito[i].producto_id && oferta.productos[1].producto_stock>0){
-                carrito.push(oferta.productos[1]); hay_oferta=true
+                carrito.push(oferta.productos[1]); hay_oferta=true; ++num_ofertas
             }}
             ++i
         }
@@ -579,11 +580,17 @@ console.log(dolarAuyu)
         }}
 
         window.quitarproducto = async function quitarproducto(id) {
+            
             if(verificador===false){return}
             
             console.log("Quitando producto ID:", id);
             
             const divid = document.getElementById(`item-${id}`);
+
+            for(let oferta of ofertas2x1){if(oferta.productos[0].producto_id==id){
+                const divid2= document.getElementById(`item-${oferta.productos[1].producto_id}`)
+                divid2.remove()
+            }}
             
             if (divid) {
                 divid.classList.add('removing');
@@ -612,10 +619,13 @@ console.log(dolarAuyu)
         function actualizarTotal() {
             precio = 0;
             let n=0
-            for (let producto of carrito) {if(n===carrito.length-1 && hay_oferta===true){return} ++n
-                const precioNumerico = Number(producto.producto_precio.match(/\d+/)[0])
+            for (let producto of carrito) {if(n>=carrito.length-num_ofertas && hay_oferta===true){console.log("hay oferta",num_ofertas)} 
+            else{const precioNumerico = Number(producto.producto_precio.match(/\d+/)[0])
                 if (producto.producto_precio.includes("US$")){precioNumerico*40};
-                precio += precioNumerico;
+                precio += precioNumerico;}
+                
+
+                ++n
 
                 
             }
@@ -665,7 +675,7 @@ console.log(dolarAuyu)
 
             // Calcular total
              precioenvio=0; console.log("carrito:xd",carrito)
-            for (let producto of carrito) { if(hay_oferta===true && n===carrito.length-1){console.log("hay oferta")}
+            for (let producto of carrito) { if(hay_oferta===true && n>=carrito.length-num_ofertas){console.log("hay oferta")}
             else{                let precioNumerico = Number(producto.producto_precio.match(/\d+/)[0]);
                 if (producto.producto_precio.includes("US$")){precioNumerico=precioNumerico*dolarAuyu}
                 precio += precioNumerico;
@@ -711,7 +721,7 @@ console.log(dolarAuyu)
                 if (!imagenSrc) {
                     imagenSrc = '/placeholder.png';
                 }
-                if(hay_oferta===true && c===carrito.length-1){
+                if(hay_oferta===true && c>=carrito.length-num_ofertas){
                      itemsHTML += `
                     <div class="cart-item" id="item-${producto.producto_id}" style="animation-delay: ${index * 0.1}s">
                         <div class="item-image-container">
