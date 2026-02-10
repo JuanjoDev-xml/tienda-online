@@ -348,11 +348,11 @@ app.post("/comprar",async function(req,res){console.log("comprar")
 
    
     let producto= await log_products.find({producto_id: req.session.producto_id})
-     for(let oferta of ofertas2x1){
+   if(ofertas2x1.length!==0){ for(let oferta of ofertas2x1){
         if(oferta.productos[0].producto_id===producto[0].producto_id){
-            producto.push(oferta.productos[1]); return
+            producto.push(oferta.productos[1]);
         }
-    }
+    }}
     console.log("producto:",producto)
     let precio1= Number(producto[0].producto_precio.match(/\d+/))
     let unidad=producto[0].producto_precio.match(/[^\d]+/g).toString()
@@ -374,13 +374,14 @@ app.post("/comprar",async function(req,res){console.log("comprar")
     async function preferencia(unidad){if(Number(producto[0].producto_stock)>0){
     try{
         const body= {
-            items:[{title: producto[0].producto_nombre+" "+ producto[1].producto_nombre + " (oferta 2x1)",
+            items:[{title: producto[0].producto_nombre+" y "+ producto[1].producto_nombre + " (oferta 2x1)",
                 unit_price: precio1,
                 quantity:1,
                 currency_id:unidad
             }],  external_reference:req.session.usuario,
             metadata:{id: req.session.producto_id,
                 producto: req.session.producto,
+                oferta: producto[1],
                 direccion: req.body.ubicacion
             },
              payer: {  // ← ESTO ES LO QUE FALTA
@@ -405,8 +406,10 @@ app.post("/comprar",async function(req,res){console.log("comprar")
 })
 
 app.post("/comprar-carrito",async function(req,res){
+    let hay_oferta=false
     let z=0
     let i=0
+    let n=0
     let carrito= await log_carrito.find({usuario: req.session.usuario})
     console.log(carrito)
     let coste_envio=0
@@ -416,6 +419,7 @@ let precio_envio=0
     let preciototal=0
 
     let ofertas2x1= await log_ofertas2x1.find({})
+    if(ofertas2x1.length!==0){hay_oferta=true}
     while(i<carrito.length){
         for(let ofertas of ofertas2x1){
             if(ofertas.productos[0].producto_id===carrito[i].producto_id){
@@ -433,7 +437,9 @@ let precio_envio=0
 
 
     for(let producto of carrito){
-        let producto_precio= Number(producto.producto_precio.match(/\d+/))
+        if(n===carrito.length-1 && hay_oferta===true){console.log("hay ofertiña UwU")}
+        else{
+            let producto_precio= Number(producto.producto_precio.match(/\d+/))
        if(producto.producto_precio.includes("US$")){producto_precio= producto_precio*dolarAuyu}
         preciototal+=producto_precio;
 
@@ -444,7 +450,9 @@ let precio_envio=0
 
     if(precio_envio>coste_envio){coste_envio=precio_envio; console.log("coste envio: ", coste_envio)} }
 
-if(req.body.ubicacion!==" no definida (se recogerá en el local)"){preciototal+=coste_envio; console.log("hay ubicación")}
+if(req.body.ubicacion!==" no definida (se recogerá en el local)"){preciototal+=coste_envio; console.log("hay ubicación")
+        } ++n
+        }
 
         try{
         const body= {
@@ -519,7 +527,7 @@ app.post("/webhook", async function(req, res) {
     }); 
     
     if(!paymentInfo.metadata.carrito){await log_compras.create({usuario: paymentInfo.external_reference,
-        producto_nombre: paymentInfo.metadata.producto,
+        producto_nombre: paymentInfo.metadata.producto+ "y gratis el producto "+ paymentInfo.metadata.oferta.producto_nombre,
         producto_id:paymentInfo.metadata.id, producto_precio: producto[0].producto_precio, producto_envio: producto[0].producto_envio,
         local_ubicacion: paymentInfo.metadata.direccion,
         Date: Date.now()
@@ -708,7 +716,6 @@ IO.on("connection",async function(socket){
     socket.emit("comentarios",comentario)
 
     IO.emit("respuestas",respuestas)
-    IO.emit("quitar-carrito")
 
     console.log("te conectaste")
    
