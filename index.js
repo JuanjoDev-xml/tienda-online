@@ -417,13 +417,14 @@ app.post("/comprar-carrito",async function(req,res){
     let products= await log_products.find({})
 let precio_envio=0
     let preciototal=0
+    let num_ofertas=0
 
     let ofertas2x1= await log_ofertas2x1.find({})
     if(ofertas2x1.length!==0){hay_oferta=true}
     while(i<carrito.length){
         for(let ofertas of ofertas2x1){
             if(ofertas.productos[0].producto_id===carrito[i].producto_id){
-                carrito.push(ofertas.productos[1])
+                carrito.push(ofertas.productos[1]); ++num_ofertas
             }
         }
         ++i
@@ -437,7 +438,7 @@ let precio_envio=0
 
 
     for(let producto of carrito){
-        if(n===carrito.length-1 && hay_oferta===true){console.log("hay ofertiña UwU")}
+        if(n>=carrito.length-num_ofertas && hay_oferta===true){console.log("hay ofertiña UwU,n carrito y num de ofertas",n,carrito,num_ofertas)} 
         else{
             let producto_precio= Number(producto.producto_precio.match(/\d+/))
        if(producto.producto_precio.includes("US$")){producto_precio= producto_precio*dolarAuyu}
@@ -448,11 +449,11 @@ let precio_envio=0
         if(producto.producto_envio!==undefined && producto.producto_envio.includes("US$")){
             precio_envio= precio_envio*dolarAuyu}
 
-    if(precio_envio>coste_envio){coste_envio=precio_envio; console.log("coste envio: ", coste_envio)} }
+    if(precio_envio>coste_envio){coste_envio=precio_envio; console.log("coste envio: ", coste_envio)}
 
-if(req.body.ubicacion!==" no definida (se recogerá en el local)"){preciototal+=coste_envio; console.log("hay ubicación")
-        } ++n
+if(req.body.ubicacion!==" no definida (se recogerá en el local)"){preciototal+=coste_envio; console.log("hay ubicación")}} ++n
         }
+        console.log(preciototal)
 
         try{
         const body= {
@@ -611,8 +612,9 @@ app.post("/webhook", async function(req, res) {
 
     app.post("/quitar-del-carrito",async function(req,res){
         await log_carrito.findOneAndDelete({producto_id: Number(req.body.id)})
-        res.send("ok")
         IO.emit("quitar-carrito")
+        res.send("ok")
+        
     })
 
     app.get("/compra-carrito",function(req,res){
