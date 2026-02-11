@@ -21,6 +21,7 @@ import {log_compras} from './base_de_datos_mongo/mongo-compras.js'
 import { log_pagos_id } from './base_de_datos_mongo/mongo_pagos.js'
 import { log_compras_terminadas } from './base_de_datos_mongo/mongo-compras-terminadas.js'
 import  {log_ofertas2x1}  from './base_de_datos_mongo/mongo-ofertas.js'
+import { log_ofertas_envio } from './base_de_datos_mongo/mongo-ofertas_envio.js'
 
 dotenv.config()
 
@@ -345,24 +346,45 @@ app.get("/compra",function(req,res){
 })
 app.post("/comprar",async function(req,res){console.log("comprar")
     let ofertas2x1= await log_ofertas2x1.find({})
+    let ofertas_envios= await log_ofertas_envio.find({})
+
+    let hay_oferta= false
+    let hay_oferta_envio= false
+
+    let compras= await log_compras.find({usuario: req.session.usuario})
+
+    let i=0
+   
+
+    if(compras.length!==0){ for(let compra of compras){
+        if(!compra.local_ubicacion.includes("no definida")){hay_oferta_envio=false; ++i; break}
+    }}
+
+    if(i===0){hay_oferta_envio=true}
 
    
     let producto= await log_products.find({producto_id: req.session.producto_id})
+
    if(ofertas2x1.length!==0){ for(let oferta of ofertas2x1){
         if(oferta.productos[0].producto_id===producto[0].producto_id){
-            producto.push(oferta.productos[1]);
+            producto.push(oferta.productos[1]); hay_oferta=true
         }
     }}
-    console.log("producto:",producto)
     let precio1= Number(producto[0].producto_precio.match(/\d+/))
     let unidad=producto[0].producto_precio.match(/[^\d]+/g).toString()
-    console.log("precio1:",precio1)
+
     let precioenvio;
     let unidadenvio;
+
     if(producto[0].producto_envio){
            precioenvio= Number(producto[0].producto_envio.match(/\d+/))
     unidadenvio=producto[0].producto_precio.match(/[^\d]+/g).toString()
 
+    }
+   if(hay_oferta_envio===true){ for(let oferta_envio of ofertas_envios){
+        if(oferta_envio.producto_id==producto[0].producto_id){
+            precioenvio=0
+        }}
     }
   
     if(req.body.envio==="si"){
@@ -371,8 +393,36 @@ app.post("/comprar",async function(req,res){console.log("comprar")
 
         precio1+= precioenvio
     }
+
     async function preferencia(unidad){if(Number(producto[0].producto_stock)>0){
-    try{
+        if(hay_oferta===false){ try{
+        const body= {
+            items:[{title: producto[0].producto_nombre,
+                unit_price: precio1,
+                quantity:1,
+                currency_id:unidad
+            }],  external_reference:req.session.usuario,
+            metadata:{id: req.session.producto_id,
+                producto: req.session.producto,
+                oferta: producto[1],
+                direccion: req.body.ubicacion
+            },
+             payer: {  // ← ESTO ES LO QUE FALTA
+                email: "test_user_123456@testuser.com"  // Email de prueba
+            },
+            back_urls:{
+                success: `https://tienda-online-5jo4.onrender.com/tienda/${req.session.usuario}`,
+                failure: "http://localhost:3000/pago-fallido",
+                pending: "http://localhost:3000/pago-pendiente"
+            },
+            notification_url: "https://tienda-online-5jo4.onrender.com/webhook"
+        };
+        const response= await preference.create({body});    
+        console.log("init_point:",response.init_point)
+        res.json({init_point: response.init_point})
+    }catch(error){console.log("error:", error)}}
+    else if(hay_oferta===true){
+         try{
         const body= {
             items:[{title: producto[0].producto_nombre+" y "+ producto[1].producto_nombre + " (oferta 2x1)",
                 unit_price: precio1,
@@ -397,7 +447,9 @@ app.post("/comprar",async function(req,res){console.log("comprar")
         const response= await preference.create({body});    
         console.log("init_point:",response.init_point)
         res.json({init_point: response.init_point})
-    }catch(error){console.log("error:", error)}}
+    }catch(error){console.log("error:", error)}
+    }
+   }
     else{res.send("no hay stock")}}
 
     if(unidad==="$"){preferencia("UYU")}
@@ -413,6 +465,24 @@ app.post("/comprar-carrito",async function(req,res){
     let carrito= await log_carrito.find({usuario: req.session.usuario})
     console.log(carrito)
     let coste_envio=0
+
+    let hay_oferta_envio= false
+
+   let ofertas_envios= await log_ofertas_envio.find({})
+
+   let compras= await log_compras.find({usuario: req.session.usuario})
+
+    let a=0
+   
+
+    if(compras.length!==0){ for(let compra of compras){
+        if(!compra.local_ubicacion.includes("no definida")){hay_oferta_envio=false; ++a; break}
+    }}
+
+    if(a===0){hay_oferta_envio=true}
+
+
+   
 
     let products= await log_products.find({})
 let precio_envio=0
@@ -438,6 +508,9 @@ let precio_envio=0
 
 
     for(let producto of carrito){
+        if(hay_oferta_envio===true){for(let oferta_envio of ofertas_envios ){
+        if(oferta_envio.producto_id==producto.producto_id){producto.producto_envio=0}
+    }}
         if(n>=carrito.length-num_ofertas && hay_oferta===true){console.log("hay ofertiña UwU,n carrito y num de ofertas",n,carrito,num_ofertas)} 
         else{
             let producto_precio= Number(producto.producto_precio.match(/\d+/))
@@ -677,6 +750,27 @@ app.post("/webhook", async function(req, res) {
             }
         }
         res.sendStatus(200); return
+    })
+
+    app.post("/crear-envio-gratis",async function(req,res){
+        await log_ofertas_envio.create({producto_id: req.body.producto_id})
+        res.sendStatus(200)
+    })
+
+    app.get("/ver-envios-gratis",async function(req,res){
+        let ofertas_de_envio= await log_ofertas_envio.find({})
+        res.json(ofertas_de_envio)
+    })
+
+    app.post("/cambiar-coste-envio",async function(req,res){
+        if(!req.body.envio.includes("$") && !req.body.envio.includes("US$")){res.send("ingrese una unidad válida"); return}
+      try{await log_products.findOneAndUpdate({producto_id: req.session.producto_id},{producto_envio: req.body.envio
+        })
+}catch(error){console.log("error",error)}
+
+console.log(req.session.producto_id,req.body.envio)
+        
+        res.sendStatus(200)
     })
 //----------------rutas dinámicas--------------------
 
