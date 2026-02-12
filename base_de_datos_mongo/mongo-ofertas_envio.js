@@ -6,11 +6,7 @@ try{await mongoose.connect(process.env.URL)}
 catch(error){console.log("error:",error)}
 
 let esquema=new mongoose.Schema({
- usuario_al_que_se_responde: String,
- comentario: String,
- producto: String,
- producto_id: Number,
- respuesta: String
+    producto_id: String
 });
 
-export let log_respuestas= mongoose.model("respuestas-tienda-online",esquema)
+export let log_ofertas_envio= mongoose.model("primer_envio_gratis-tienda-online",esquema)
