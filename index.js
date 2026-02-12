@@ -22,6 +22,7 @@ import { log_pagos_id } from './base_de_datos_mongo/mongo_pagos.js'
 import { log_compras_terminadas } from './base_de_datos_mongo/mongo-compras-terminadas.js'
 import  {log_ofertas2x1}  from './base_de_datos_mongo/mongo-ofertas.js'
 import { log_ofertas_envio } from './base_de_datos_mongo/mongo-ofertas_envio.js'
+import { log_reembolsos } from './base_de_datos_mongo/mongo-reembolsos.js'
 
 dotenv.config()
 
@@ -348,6 +349,8 @@ app.post("/comprar",async function(req,res){console.log("comprar")
     let ofertas2x1= await log_ofertas2x1.find({})
     let ofertas_envios= await log_ofertas_envio.find({})
 
+    if(req.body.unidad<0){return res.statusCode(400)}
+
     let hay_oferta= false
     let hay_oferta_envio= false
 
@@ -399,7 +402,7 @@ app.post("/comprar",async function(req,res){console.log("comprar")
         const body= {
             items:[{title: producto[0].producto_nombre,
                 unit_price: precio1,
-                quantity:1,
+                quantity:req.body.unidad,
                 currency_id:unidad
             }],  external_reference:req.session.usuario,
             metadata:{id: req.session.producto_id,
@@ -585,7 +588,12 @@ app.post("/webhook", async function(req, res) {
              const paymentInfo= await payment.get({id:paymentId})
                
            
-            
+            if(paymentInfo.status="refunded"){
+                let compra= await log_compras.find({paymentId:paymentId})
+                compra[0].reembolsado= false
+                await log_compras.findOneAndDelete({paymentId:paymentId})
+                await log_reembolsos.create(compra[0])
+            }
             
             // Opcional: Obtener más detalles del pago
             // const payment = await Payment.get({ id: paymentId });
@@ -604,7 +612,8 @@ app.post("/webhook", async function(req, res) {
         producto_nombre: paymentInfo.metadata.producto+ "y gratis el producto "+ paymentInfo.metadata.oferta.producto_nombre,
         producto_id:paymentInfo.metadata.id, producto_precio: producto[0].producto_precio, producto_envio: producto[0].producto_envio,
         local_ubicacion: paymentInfo.metadata.direccion,
-        Date: Date.now()
+        Date: Date.now(),
+        paymentId: paymentId
 
         
         
@@ -646,7 +655,8 @@ app.post("/webhook", async function(req, res) {
             productos: paymentInfo.metadata.carrito,
          producto_envio: envio,
         local_ubicacion: paymentInfo.metadata.direccion,
-        Date: Date.now()
+        Date: Date.now(),
+        paymentId: paymentId
         
     });IO.emit("compras")}catch(error){console.log("error creando la notificacion del carrito",error)}
     }
@@ -771,6 +781,26 @@ app.post("/webhook", async function(req, res) {
 console.log(req.session.producto_id,req.body.envio)
         
         res.sendStatus(200)
+    })
+
+    app.get("/reembolsos",function(req,res){
+        res.render("reembolsos")
+    })
+
+    app.get("/ver-reembolsos",async function(req,res){
+        let reembolsos= await log_reembolsos.find({})
+        res.json(reembolsos)
+    })
+
+    app.post("/reembolsar",async function(req,res){
+
+        try{await log_reembolsos.findOneAndUpdate({paymentId: req.body.id},{reembolsado: true})} catch(error){console.log(error)}
+        
+        res.send("ok")
+    })
+
+    app.get("/reembolsados",function(req,res){
+        res.render("reembolsados")
     })
 //----------------rutas dinámicas--------------------
 
