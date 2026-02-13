@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tickets</title>
+</head>
+<body>
+   
+    <h1>tus tickets:</h1>
+    <div id="tickets"></div>
+    <script type="module">
+        let tickets= await fetch("/ver-tickets").then(function(res){return res.json()})
+        console.log(tickets)
+        let ticketsdiv= document.getElementById("tickets")
+
+        if(tickets.length!==0){
+            for(let ticket of tickets){
+               
+                    if(ticket.producto_nombre){
+                ticketsdiv.innerHTML+=`
+            <p>usuario:${ticket.usuario}</p>
+          <p>productos: ${ticket.producto_nombre}</p>
+        <p>precio:${ticket.producto_precio}</p>
+        <p>tiempo:${ticket.Date}</p>
+        <p>id:${ticket._id}</p> <br>
+        --------------------------------`
+            }
+
+            else{ticketsdiv.innerHTML+=`
+            <p>usuario:${ticket.usuario}</p>
+        <p>tiempo:${ticket.Date}</p>`
+
+        for(let producto of ticket.productos){
+            ticketsdiv.innerHTML+=`producto:${producto.producto_nombre}  <br>
+            precio: ${producto.producto_precio}  <br>  <br>`
+        }
+    ticketsdiv.innerHTML+=`precio total: ${ticket.precio_total} <br>
+    ---------------------------------`}
+                }
+            
+            
+        }
+        
+        
+    </script>
+</body>
+</html>
