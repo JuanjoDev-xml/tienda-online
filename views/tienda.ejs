@@ -676,6 +676,9 @@
             <button onclick="cerrarsesion()" class="btn btn-secondary" id="sesion">
                 Cerrar sesión
             </button>
+            <button onclick="window.location.href='/tickets'" class="btn btn-secondary" id="sesion">
+                ver tickets
+            </button>
         </div>
     </header>
 
@@ -709,6 +712,8 @@
         let nombre = "<%= nombre %>";
 
         let ofertas2x1= await fetch("/ver-ofertas2x1").then(function(res){return res.json()})
+
+        let ofertas_envio= await fetch("/ver-envios-gratis").then(function(res){return res.json()})
 
         let notificaciones1 = await fetch("/notificaciones-comprador")
             .then(res => res.json());
@@ -869,6 +874,10 @@
                 const precio = productos[i].producto_precio;
                 let descripcion = productos[i].producto_descripcion;
                 const contenedor = document.getElementById("contenedor");
+
+                for(let oferta_envio of ofertas_envio){if(productos[i].producto_id==oferta_envio.producto_id && !nombre.includes("envio gratis")){
+                    nombre+="(primer envio gratis)"
+                }}
 
                 for(let oferta of ofertas2x1){
                     if(oferta.productos[0].producto_id===productos[i].producto_id){
