@@ -542,6 +542,7 @@ if(req.body.ubicacion!==" no definida (se recogerá en el local)"){preciototal+=
                 email: "test_user_123456@testuser.com"  // Email de prueba
             },metadata:{
                 carrito:carrito,
+                precio_total: preciototal,
                 direccion: req.body.ubicacion
             },
             back_urls:{
@@ -612,8 +613,9 @@ app.post("/webhook", async function(req, res) {
         producto_nombre: paymentInfo.metadata.producto+ "y gratis el producto "+ paymentInfo.metadata.oferta.producto_nombre,
         producto_id:paymentInfo.metadata.id, producto_precio: producto[0].producto_precio, producto_envio: producto[0].producto_envio,
         local_ubicacion: paymentInfo.metadata.direccion,
-        Date: Date.now(),
-        paymentId: paymentId
+        Date: new Date(),
+        paymentId: paymentId,
+        unidades: Number(req.body.unidad)
 
         
         
@@ -636,7 +638,7 @@ app.post("/webhook", async function(req, res) {
    
                 
              }
-             if(paymentInfo.status==="approved" && paymentInfo.metadata.carrito){ let envio=0
+             if(paymentInfo.status==="approved" && paymentInfo.metadata.carrito){
            await log_carrito.deleteMany({usuario: paymentInfo.external_reference})
        
         for(let producto of paymentInfo.metadata.carrito){ let product= (await log_products.find({producto_id: producto.producto_id}))[0]
@@ -655,8 +657,9 @@ app.post("/webhook", async function(req, res) {
             productos: paymentInfo.metadata.carrito,
          producto_envio: envio,
         local_ubicacion: paymentInfo.metadata.direccion,
-        Date: Date.now(),
-        paymentId: paymentId
+        Date: new Date(),
+        paymentId: paymentId,
+        precio_total: paymentInfo.metadata.preciototal
         
     });IO.emit("compras")}catch(error){console.log("error creando la notificacion del carrito",error)}
     }
@@ -801,6 +804,19 @@ console.log(req.session.producto_id,req.body.envio)
 
     app.get("/reembolsados",function(req,res){
         res.render("reembolsados")
+    })
+
+    app.get("/tickets",function(req,res){
+        res.render("tickets")
+    })
+
+    app.get("/ver-tickets",async function(req,res){
+        let compras= await log_compras.find({usuario: req.session.usuario})
+        let compras_terminadas= await log_compras_terminadas.find({usuario:req.session.usuario})
+
+        let tickets= [...compras,...compras_terminadas]
+        console.log("tickets:",tickets)
+        res.json(tickets)
     })
 //----------------rutas dinámicas--------------------
 
