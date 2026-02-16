@@ -23,6 +23,7 @@ import { log_compras_terminadas } from './base_de_datos_mongo/mongo-compras-term
 import  {log_ofertas2x1}  from './base_de_datos_mongo/mongo-ofertas.js'
 import { log_ofertas_envio } from './base_de_datos_mongo/mongo-ofertas_envio.js'
 import { log_reembolsos } from './base_de_datos_mongo/mongo-reembolsos.js'
+import { log_numero_vendedor } from './base_de_datos_mongo/mongo-numero-whatssap.js'
 
 dotenv.config()
 
@@ -123,8 +124,11 @@ try{let comparacion= await bcryptjs.compare(req.body.contraseña, cuenta[0].cont
        
 })
 
-app.get("/tienda",function(req,res){ if(req.session.usuario===undefined){ res.sendFile("login.html",{root:import.meta.dirname}); return}
-    res.render("tienda",{nombre: req.session.usuario})
+app.get("/tienda",async function(req,res){ if(req.session.usuario===undefined){ res.sendFile("login.html",{root:import.meta.dirname}); return}
+    let numero= await log_numero_vendedor.find({})
+    let numero_valido= numero[0].replace("+","")
+    let numero_ahora_si_valido_en_serio_UwU= numero_valido.replace(/ /g,"")
+    res.render("tienda",{nombre: req.session.usuario,numero: numero_ahora_si_valido_en_serio_UwU})
 })
 
 app.get("/tienda/cerrarsesion",function(req,res){
@@ -132,9 +136,13 @@ app.get("/tienda/cerrarsesion",function(req,res){
     res.sendFile("login.html",{root: import.meta.dirname})
 })
 
-app.get("/tienda/visitante",function(req,res){
+app.get("/tienda/visitante",async function(req,res){
     delete req.session.usuario
-    res.render("tienda",{nombre: "visitante"})
+
+    let numero= await log_numero_vendedor.find({})
+    let numero_valido= numero[0].numero_del_vendedor.replace("+","")
+    let numero_ahora_si_valido_en_serio_UwU= numero_valido.replace(/ /g,"")
+    res.render("tienda",{nombre: "visitante",numero: numero_ahora_si_valido_en_serio_UwU})
 })
 
 app.get("/tienda/admin/productos",function(req,res){
@@ -818,12 +826,39 @@ console.log(req.session.producto_id,req.body.envio)
         console.log("tickets:",tickets)
         res.json(tickets)
     })
+
+    app.post("/leer-mensajes",async function(req,res){
+     await log_mensajes_cliente.updateMany({usuario: req.body.usuario},{$set: {leido:true}})
+
+     let mensajes= await log_mensajes_cliente.find({})
+    IO.emit("mensajes",mensajes)
+
+    res.sendStatus(200)
+
+
+})
+
+app.post("/enviar-numero",async function(req,res){
+    if(!req.body.numero.includes("+")){return res.send("ingrese el numero internacional al principio, ej: +598")}
+    try{ await log_numero_vendedor.deleteMany({})
+    await log_numero_vendedor.create({numero_del_vendedor: req.body.numero})
+res.send("ingreso del numero exitoso")} catch(error){
+    console.log("error:",error);
+    res.send("error en el ingreso del numero, por favor inteténtelo de nuevo")
+}
+   
+
+})
 //----------------rutas dinámicas--------------------
 
-app.get("/tienda/:nombre",function(req,res){
+app.get("/tienda/:nombre",async function(req,res){
     console.log("usuario",req.session.usuario)
+    let numero= await log_numero_vendedor.find({})
+    let numero_valido= numero[0].numero_del_vendedor.replace("+","")
+    let numero_ahora_si_valido_en_serio_UwU= numero_valido.replace(/ /g,"")
+    console.log(numero_ahora_si_valido_en_serio_UwU)
     if(req.session.usuario===undefined && req.query.external_reference===undefined){return res.sendFile("login.html",{root:import.meta.dirname})}
-     res.render("tienda",{nombre: req.session.usuario})
+     res.render("tienda",{nombre: req.session.usuario,numero: numero_ahora_si_valido_en_serio_UwU})
 
 })
 
@@ -846,6 +881,7 @@ app.get("/mensajeria/:usuario",function(req,res){if(req.session.usuario==="admin
     
     res.render("mensajes-cliente",{usuario: req.session.usuario})
 })
+
 
 //----------------------------websocket----------------------
 
