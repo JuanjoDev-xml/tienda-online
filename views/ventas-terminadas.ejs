@@ -509,12 +509,21 @@ body::before {
     <div class="pagination-container" id="pagination"></div>
 </div>
 
+<p id="ganancias-mes">dinero promedio ganado por mes:</p>
+
 <script src="socket.io/socket.io.js"></script>
 <script type="module">
 //declaraciones
 let ventas_terminadas= await fetch("/ver-ventas-terminadas").then(function(res){return res.json()})
 let ventasdiv= document.getElementById("ventas")
 let ventas_con_ubicaciondiv= document.getElementById("ventas-con-ubicacion")
+
+let mes=0
+
+let mes_grande=0
+    let mes_pequeño= 13
+    let meses_transcurridos=0
+    let dineroGanado=0.1
 
 // Obtener cotización del dólar (UYU)
 const response = await fetch("https://open.er-api.com/v6/latest/USD");
@@ -549,7 +558,13 @@ function ventasuwu(){
     let ventasEnvioPagina = 0
     let cardDelay = 0
     
+    
     for(let venta of ventasPagina){
+        if(venta.Date){
+           mes=Number(venta.Date.split("-")[1])
+            if(mes>mes_grande){mes_grande=mes }
+            if(mes<mes_pequeño){mes_pequeño=mes}
+        }
         // Ventas sin ubicación (retiro en local)
         if(venta.productos.length===0 && (venta.local_ubicacion.includes("no definida") || venta.local_ubicacion==="")){
             ventasLocalesPagina++
@@ -744,7 +759,7 @@ function ventasuwu(){
     // Contar totales (de todas las ventas, no solo de la página actual)
     let totalLocales = 0
     let totalEnvios = 0
-    let dineroGanado = 0
+     dineroGanado = 0
     
     // Función auxiliar para parsear precios con conversión de dólar
     function parsearPrecio(precio) {
@@ -905,6 +920,11 @@ function renderPagination() {
 
 //codigo
 ventasuwu()
+meses_transcurridos= mes_grande-mes_pequeño
+console.log(dineroGanado)
+console.log("mes grande",mes_grande)
+console.log("mes pequeño", mes_pequeño)
+document.getElementById("ganancias-mes").textContent="ganancia promedio por mes:"+"$"+(Math.round(dineroGanado/meses_transcurridos))
 </script>
 </body>
 </html>
