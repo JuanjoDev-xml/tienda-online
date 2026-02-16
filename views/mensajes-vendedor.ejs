@@ -334,6 +334,62 @@
                 z-index: 1000;
             }
         }
+        .whatsapp-contact {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+/* INPUT */
+.whatsapp-input {
+    width: 350px;
+    padding: 0.9rem 1.2rem;
+    background: var(--primary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.whatsapp-input::placeholder {
+    color: var(--text-dim);
+}
+
+.whatsapp-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(0, 217, 255, 0.4);
+    background: var(--primary-light);
+}
+
+/* BOTÓN */
+.whatsapp-btn {
+    padding: 0.9rem 1.8rem;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), #0099CC);
+    color: var(--primary);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.whatsapp-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 217, 255, 0.35);
+}
+
+.whatsapp-btn:active {
+    transform: scale(0.98);
+}
+
+.whatsapp-input::placeholder {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+}
     </style>
 </head>
 <body>
@@ -349,6 +405,18 @@
     <div class="chat-main">
         <div class="chat-header">
             <h1 class="chat-header-title" id="current-chat-name">Selecciona una conversación</h1>
+            <div class="whatsapp-contact">
+    <input 
+        type="tel" 
+        id="numero"
+        placeholder="Ingrse su número internacional para que le contacten por WhatsApp"
+        class="whatsapp-input"
+        style="width:450px"
+    >
+    <button class="whatsapp-btn" onclick="enviarnumero()">
+        Enviar
+    </button>
+</div>
             <button class="back-btn" onclick="window.location.href='/tienda/admin'">← Volver</button>
         </div>
         
@@ -375,10 +443,16 @@
         let a = 0;
         let estado_mensajes= false
         setInterval(async() => {
-            res = await fetch("/chats").then(res => res.json());
+            res = await fetch("/chats").then(res => res.json()); //se que esto esta mal, pero me da alta paja usar más websockets xD
         }, 1000);
 
         // ------------ declaración de funciones ---------------
+
+        window.enviarnumero= async function enviarnumero(){
+            await fetch("/enviar-numero",{
+                method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({numero: document.getElementById("numero").value})
+            }).then(function(res){return res.text()}).then(function(res){return alert(res)})
+        }
         window.buscarusuario = function buscarusuario() {
             for (let usuario of usuarios) {
                 if (document.getElementById("usuarios").value === usuario) {
@@ -402,7 +476,27 @@
             boton.id = `${usuario}`;
             boton.className = "chat-item";
 
+             socket.on("mensajes", function(mensajes) {
+                    if(mensajes.length>1){mensajesuwu=mensajes; console.log(mensajesuwu)}
+                   if(mensajes.length===1){ mensajesuwu.push(mensajes[0])};
+                    if (mensajes && mensajes[0].vendedor === false) {
+                        return mostrarmensajes(mensajesuwu, usuario);
+                    }
+
+                    socket.off("mensajes")
+                })
+
+            for(let mensaje of mensajesuwu){
+                if(mensaje.usuario===usuario && (mensaje.leido===undefined || mensaje.leido===false)){boton.textContent+="(nuevo mensaje)"; break}
+            }
+
             boton.onclick = async function() { if(estado_mensajes===false){return}
+            
+
+            await fetch("/leer-mensajes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({usuario: usuario})})
+
+           
+            
                 // Update UI
                 document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
                 boton.classList.add('active');
@@ -417,12 +511,15 @@
                     <button id='mensajeboton' class="send-btn">Enviar</button>
                 `;
 
-                socket.on("mensajes", function(mensajes) {
-                    mensajesuwu.push(mensajes[0]);
-                    if (mensajes[0].vendedor === false) {
+                socket.on("mensajes", function(mensajes) { console.log("mensajes:",mensajes)
+                    if(mensajes.length>1){mensajesuwu=mensajes; console.log(mensajesuwu)}
+                   if(mensajes.length===1){ mensajesuwu.push(mensajes[0])};
+                    if (mensajes && mensajes[0].vendedor === false) {
                         return mostrarmensajes(mensajesuwu, usuario);
                     }
-                });
+                })
+                
+                 boton.textContent = usuario;
                 
                 mostrarmensajes(mensajesuwu, usuario);
 
@@ -553,14 +650,15 @@
             }
         }, 1000);
 
-        chatsdiv.innerHTML = "";
-        for (let usuario of res) {
-            crearbotones(usuario);
-        }
+        
 
         // ------------ websocket --------------------
         function socketfunction(mensajes) {
             mensajesuwu = mensajes;
+            chatsdiv.innerHTML = "";
+        for (let usuario of res) {
+            crearbotones(usuario);
+        }
             console.log("mensajesuwu es:", mensajesuwu);
             socket.off("mensajes", socketfunction);
             estado_mensajes=true
