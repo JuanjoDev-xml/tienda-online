@@ -126,7 +126,7 @@ try{let comparacion= await bcryptjs.compare(req.body.contraseña, cuenta[0].cont
 
 app.get("/tienda",async function(req,res){ if(req.session.usuario===undefined){ res.sendFile("login.html",{root:import.meta.dirname}); return}
     let numero= await log_numero_vendedor.find({})
-    let numero_valido= numero[0].replace("+","")
+    let numero_valido= numero[0].numero_del_vendedor.replace("+","")
     let numero_ahora_si_valido_en_serio_UwU= numero_valido.replace(/ /g,"")
     res.render("tienda",{nombre: req.session.usuario,numero: numero_ahora_si_valido_en_serio_UwU})
 })
