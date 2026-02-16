@@ -186,9 +186,10 @@ app.post("/comprobar-usuario",async function(req,res){
 })
 
 app.post("/editarnombre",async function(req,res){
-    let producto= await log_products.findOneAndUpdate({producto_id:req.body.nombre},{producto_nombre: req.body.nombreeditado},{new: true})
+    console.log(req.body.id)
+    let producto= await log_products.findOneAndUpdate({producto_id:req.body.id},{producto_nombre: req.body.nombreeditado},{new: true})
 
-    res.render("producto-admin",{nombreeditado:req.body.nombreeditado})
+    res.json({nombreeditado:req.body.nombreeditado,id: req.body.id})
 })
 
 app.post("/editardescripcion",async function(req,res){
