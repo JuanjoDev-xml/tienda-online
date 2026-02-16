@@ -288,6 +288,15 @@
                 <input type="number" class="form-input" placeholder="Cantidad disponible" name="stock" id="stock">
             </div>
 
+              <div class="form-group">
+                <label class="form-label" for="local">Ubicación del local</label>
+                <input type="text" class="form-input" placeholder="ingrese la ubicación del local" name="local" id="local">
+            </div>
+
+              <div class="form-group">
+                <label class="form-label" for="local">costo de envío</label>
+                <input type="text" class="form-input" placeholder="¿cuanto quiere que cueste el envío?" name="envio" id="envio">
+            </div>
             <div class="form-hint">
                 💡 El precio solo puede estar en pesos uruguayos ($) o dólares (US$)
             </div>
@@ -314,6 +323,11 @@
             let nombre = document.getElementById("nombre").value;
             let stock = Number(document.getElementById("stock").value);
             let imagen = document.getElementById("imagenes").value;
+            let envio= document.getElementById("envio").value
+
+            if(!envio.startsWith("$") && !envio.toUpperCase().startsWith("US$")){alert("ingrese bien la unidad del precio del envío");
+                event.preventDefault()
+            }
 
             if (nombre === "") {
                 alert("Ingrese un nombre");
