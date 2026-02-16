@@ -433,6 +433,14 @@
                     </div>
                 </div>
 
+                <div class="edit-section">
+                    <h3 class="section-title">💰 Precio del envio</h3>
+                    <div class="input-group">
+                        <input type="text" id="editarprecio-envio" placeholder="Nuevo precio" class="form-input">
+                        <button onclick="cambiarenvio()" class="btn btn-primary">Guardar</button>
+                    </div>
+                </div>
+
                 <!-- Edit Stock -->
                 <div class="edit-section">
                     <h3 class="section-title">📦 Stock</h3>
@@ -449,6 +457,7 @@
                 <button onclick="editarubicacion()" class="btn btn-primary">guardar</button>
                     </div>
 
+
                 <!-- Delete Product -->
                 <div class="edit-section">
                     <h3 class="section-title">🗑️ Eliminar Producto</h3>
@@ -464,6 +473,12 @@
                 </div>
             </div>
         </div>
+
+         <div class="edit-section">
+                    <h3 class="section-title">🗑️ Crear oferta "primer envio gratis"</h3>
+                    <button onclick="envio_gratis()" class="btn btn-primary">Crear oferta</button>
+                </div>
+                
 
          <div class="edit-section">
                     <h3 class="section-title" id="titulo">🗑️ borrar oferta</h3>
@@ -488,7 +503,15 @@
         let currentImageIndex = 0;
         let productImages = [];
         let hay_oferta=false
+        let hay_oferta_envio= false
         let ofertas2x1= await fetch("/ver-ofertas2x1").then(function(res){return res.json()})
+        let envio;
+
+        let ofertas_envio= await fetch("/ver-envios-gratis").then(function(res){return res.json()})
+
+        for(let oferta_envio of ofertas_envio){if(id===oferta_envio.producto_id){hay_oferta_envio=true}
+
+        }
 
 
         let productoreal;
@@ -604,10 +627,27 @@
         }   
         // funciones generales
 
+        window.cambiarenvio= async function cambiarenvio(){
+            await fetch("/cambiar-coste-envio",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({envio: document.getElementById("editarprecio-envio").value })})
+
+            document.getElementById("envio").textContent=document.getElementById("editarprecio-envio").value
+        }
+
         window.borraroferta2x1= async function borraroferta2x1(){
             await fetch("/borrar-oferta2x1",{method:"POST",headers:{"Content-Type":"application/json"},
         body:JSON.stringify({producto_id: productoreal })})
         }
+
+         window.envio_gratis= async function envio_gratis(){
+            await fetch("/crear-envio-gratis",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({producto_id: productoreal })})
+             let contenedor = document.getElementById("contenedor");
+        document.getElementById("nombre").textContent+= " (primer envio gratis)"
+
+
+        }
+
 
         window.oferta2x1= async function oferta2x1(){
             await fetch("/crear-oferta-2x1",{method:"POST",headers:{"Content-Type":"application/json"},
@@ -627,12 +667,12 @@
                 method: "post",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({
-                    nombre: id,
+                    id: id,
                     nombreeditado: document.getElementById("editarnombre").value
                 })
             });
             let data = await url.json();
-            window.location.href = `/producto/${data.nombreeditado}`;
+            window.location.href = `/producto/${data.nombreeditado}/${id}`;
         }
 
         window.enviardescripcion = async function enviardescripcion() {
@@ -682,6 +722,11 @@
             let descripcion = producto.producto_descripcion;
             let stock = "stock: " + producto.producto_stock; 
             let ubicacion= "ubicación del local: "+ producto.local_ubicacion
+             envio= producto.producto_envio
+
+            if(hay_oferta_envio===true){nombre+=" (primer envio gratis)";
+            }
+
             if(producto.local_ubicacion===undefined){ubicacion="ubicación del local no especificada"}
 
               for(let oferta2x1 of ofertas2x1){
@@ -747,6 +792,7 @@
                 <h3 class="product-name" id="nombre">${nombre}</h3>
                 <p class="product-price" id="precio">${precio}</p>
                 <p class="product-desc" id="descripcion">${descripcion}</p>
+                 <p class="product-desc" id="envio">coste del envio: ${envio}</p>
                 <p class="product-stock" id="stock">${stock}</p>
                 <p class="product-desc" id="local">${ubicacion}</p>
             `;
