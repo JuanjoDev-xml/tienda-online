@@ -530,6 +530,10 @@ body::before {
     <button class="btn btn-ver-terminadas" onclick="window.location.href='/ventas-terminadas'">
         ✓ Ver Ventas Terminadas
     </button>
+
+     <button class="btn btn-ver-terminadas" onclick="window.location.href='/reembolsos'">
+        ✓ Ver reembolsos
+    </button>
 </div>
 
 <script src="socket.io/socket.io.js"></script>
@@ -647,7 +651,7 @@ function ventasuwu(){
     
     for(let venta of ventas_pagina){ // SOLO CAMBIADO: ventas -> ventas_pagina
         // Ventas sin ubicación (retiro en local)
-        if(venta.productos.length===0 && (venta.local_ubicacion.includes("no definida") || venta.local_ubicacion==="")){
+        if(venta.productos.length===0 && venta.local_ubicacion && (venta.local_ubicacion.includes("no definida") || venta.local_ubicacion==="")){
             if(venta.producto_precio.includes("US$")){precio+=Number(venta.producto_precio.match(/\d+/))*dolarAuyu}
             else{precio+=Number(venta.producto_precio.match(/\d+/))}
             ventasLocales++
@@ -711,7 +715,7 @@ function ventasuwu(){
         }
         
         // Ventas con ubicación (envíos)
-        if(venta.productos.length===0 && !venta.local_ubicacion.includes("no definida")){
+        if(venta.productos.length===0 && venta.local_ubicacion && !venta.local_ubicacion.includes("no definida")){
             if(venta.producto_precio.includes("US$")){precio+=Number(venta.producto_precio.match(/\d+/))*dolarAuyu}
             if(venta.producto_envio.includes("US$")){precio+=Number(venta.producto_envio.match(/\d+/))*dolarAuyu}
             else{precio+=Number(venta.producto_precio.match(/\d+/))+ Number(venta.producto_envio.match(/\d+/))}
@@ -728,11 +732,11 @@ function ventasuwu(){
                     </div>
                     <div class="venta-info">
                         <span class="venta-label">💰 Precio:</span>
-                        <span class="venta-value">$${venta.producto_precio}</span>
+                        <span class="venta-value">${venta.producto_precio}</span>
                     </div>
                     <div class="venta-info">
                         <span class="venta-label">🚚 Envío:</span>
-                        <span class="venta-value">$${venta.producto_envio}</span>
+                        <span class="venta-value">${venta.producto_envio}</span>
                     </div>
                     <div class="venta-info">
                         <span class="venta-label">📍 Domicilio:</span>
@@ -770,7 +774,7 @@ function ventasuwu(){
                         </div>
                         <div class="venta-info">
                             <span class="venta-label">💰 Precio:</span>
-                            <span class="venta-value">$${producto.producto_precio}</span>
+                            <span class="venta-value">${producto.producto_precio}</span>
                         </div>
                     </div>
                 ` 
@@ -778,7 +782,7 @@ function ventasuwu(){
             ventas_con_ubicaciondiv.innerHTML+=`
                     <div class="venta-info">
                         <span class="venta-label">🚚 Envío:</span>
-                        <span class="venta-value">$${venta.producto_envio}</span>
+                        <span class="venta-value">${venta.producto_envio}</span>
                     </div>
                     <div class="venta-info">
                         <span class="venta-label">📍 Domicilio:</span>
@@ -815,7 +819,7 @@ function ventasuwu(){
     let totalLocalesCompleto = 0
     let totalEnviosCompleto = 0
     for(let venta of ventas){
-        if(venta.local_ubicacion.includes("no definida") || venta.local_ubicacion===""){
+        if(venta.local_ubicacion && venta.local_ubicacion.includes("no definida") || venta.local_ubicacion===""){
             totalLocalesCompleto++
         } else {
             totalEnviosCompleto++
