@@ -77,8 +77,11 @@ app.use(session({
 }));
 
 //------------------------rutas estáticas---------------------------------
-app.get('/',function(req,res){ 
-    res.render("tienda",{ nombre: "visitante"
+app.get('/',async function(req,res){ 
+     let numero= await log_numero_vendedor.find({})
+    let numero_valido= numero[0].numero_del_vendedor.replace("+","")
+    let numero_ahora_si_valido_en_serio_UwU= numero_valido.replace(/ /g,"")
+    res.render("tienda",{ nombre: "visitante",numero: numero_ahora_si_valido_en_serio_UwU
     })
 })
 
