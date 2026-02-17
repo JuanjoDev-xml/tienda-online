@@ -77,6 +77,11 @@ app.use(session({
 }));
 
 //------------------------rutas estáticas---------------------------------
+
+app.get("/registro",function(req,res){
+    res.sendFile("registro1.html",{root:import.meta.dirname})
+})
+
 app.get('/',async function(req,res){ 
      let numero= await log_numero_vendedor.find({})
     let numero_valido= numero[0].numero_del_vendedor.replace("+","")
