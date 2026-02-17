@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="en"> 
 <head>
-     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4093661401182951"
-     crossorigin="anonymous"></script>
-    <meta name="google-adsense-account" content="ca-pub-4093661401182951">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
@@ -134,7 +131,7 @@
         window.location.reload();
     }
 });
-        window.redireccionaregistro=function redireccionaregistro(){window.location.href="/"}
+        window.redireccionaregistro=function redireccionaregistro(){window.location.href="/registro"}
         window.redireccionar=function redireccionar(){window.location.href="/tienda/visitante"}
         const socket=io()
           function enviar(){ socket.emit("usuario",{
@@ -156,7 +153,7 @@
 }).then(function(res){
     if(res!=="error en el inicio de sesión"){
         localStorage.setItem("token",res.token)
-    window.location.href=`/tienda/${document.getElementById("usuario").value}`;
+    window.location.href=`http://localhost:3000/tienda/${document.getElementById("usuario").value}`;
     socket.emit("html",function(){console.log(res)
         return res})
 }
