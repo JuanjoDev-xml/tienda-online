@@ -40,10 +40,22 @@ Una tienda online completa construida con Node.js, Express, MongoDB y Socket.io.
 
 ---
 
+## comprador (imagenes)
+<img width="1360" height="768" alt="Screenshot_2026-02-24_17_13_05" src="https://github.com/user-attachments/assets/fc26c545-0596-4428-9eda-6f0361572e3a" />
 
 
-## Admin 
+## Admin (imagenes)
+
+**home del vendedor**
 <img width="1360" height="768" alt="Screenshot_2026-02-24_17_04_59" src="https://github.com/user-attachments/assets/d7040f19-9020-43bb-a24a-af6d557c2171" />
+
+**mensajería del vendedor**
+<img width="1360" height="768" alt="Screenshot_2026-02-24_17_08_59" src="https://github.com/user-attachments/assets/c2f7aee8-90ab-44e7-99e9-417c900e472c" />
+
+**publicar cambios del producto**
+<img width="1360" height="768" alt="Screenshot_2026-02-24_17_11_12" src="https://github.com/user-attachments/assets/c6d25043-bf59-4311-811a-7947f55b8aa4" />
+
+
 
 ## Estructura del Proyecto
 
