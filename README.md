@@ -41,6 +41,10 @@ Una tienda online completa construida con Node.js, Express, MongoDB y Socket.io.
 ---
 
 
+
+## Admin 
+<img width="1360" height="768" alt="Screenshot_2026-02-24_17_04_59" src="https://github.com/user-attachments/assets/d7040f19-9020-43bb-a24a-af6d557c2171" />
+
 ## Estructura del Proyecto
 
 ```
