@@ -21,6 +21,7 @@ Una tienda online completa construida con Node.js, Express, MongoDB y Socket.io.
 - **Soporte de múltiples imágenes** por producto
 - **Integración con WhatsApp** del vendedor
 - **Cotización automática** del dólar (UYU)
+- **estética hecha con IA**
 
 ---
 
