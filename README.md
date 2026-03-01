@@ -1,6 +1,6 @@
 #  Marketplace - Tienda Online
 
-Una tienda online completa construida con Node.js, Express, MongoDB y Socket.io. Permite gestionar productos, procesar pagos con MercadoPago, y comunicarse en tiempo real entre compradores y vendedor.
+Una tienda online completa construida con Node.js, Express, MongoDB y Socket.io (El CSS y las animaciones las hizo la IA). Permite gestionar productos, procesar pagos con MercadoPago, y comunicarse en tiempo real entre compradores y vendedor. 
 
 ---
 
